@@ -1,0 +1,4 @@
+services:
+    data-hub-metrics-api:
+        ports:
+            - "8000:8000"

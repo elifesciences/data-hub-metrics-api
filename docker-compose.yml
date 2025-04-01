@@ -1,0 +1,16 @@
+services:
+    data-hub-metrics-api:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: ${IMAGE_REPO}:${IMAGE_TAG}
+
+    data-hub-metrics-api-dev:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            args:
+                install_dev: y
+        image:  ${IMAGE_REPO}-dev:${IMAGE_TAG}
+        command: /bin/sh -c exit 0
+        entrypoint: []
