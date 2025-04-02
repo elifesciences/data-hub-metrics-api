@@ -1,6 +1,5 @@
 SELECT * FROM (
   SELECT 
-    CONCAT('https://doi.org/', DOI) AS url,
     is_referenced_by_count AS citation_count,
     REGEXP_EXTRACT(LOWER(DOI), r'10\.7554\/elife\.(\d{5,6})') AS article_id,
     REGEXP_EXTRACT(DOI, r'\.(\d{1,2})$') AS version_number
