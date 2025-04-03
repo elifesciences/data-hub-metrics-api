@@ -1,18 +1,10 @@
-from unittest.mock import patch, MagicMock
-from typing import Iterable
+from unittest.mock import MagicMock
 
 import pytest
 
 from google.cloud.bigquery.table import Row
 
-from data_hub_metrics_api.utils import bigquery as bigquery_module
 from data_hub_metrics_api.utils.bigquery import iter_dict_from_bq_query
-
-
-@pytest.fixture(name="bigquery_mock")
-def _bigquery_mock() -> Iterable[MagicMock]:
-    with patch.object(bigquery_module, "bigquery") as mock:
-        yield mock
 
 
 @pytest.fixture(name="bq_client_mock")
