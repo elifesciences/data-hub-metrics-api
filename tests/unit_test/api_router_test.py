@@ -29,7 +29,7 @@ class TestProvideCitations:
             "citations": 7
         }
         client = create_test_client(citations_provider_list=[citations_provider_mock])
-        response = client.get('/elife-metrics/article/85111/citations/version/2')
+        response = client.get('/metrics/article/85111/citations/version/2')
         response.raise_for_status()
         actual_response_json = response.json()
         assert actual_response_json == [
