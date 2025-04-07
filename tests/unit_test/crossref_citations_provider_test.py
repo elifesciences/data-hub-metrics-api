@@ -28,3 +28,8 @@ class TestGetCitationCountsByArticleIdAndVersionMap:
         expected_result = {('12345', None): 81}
         result = get_citation_counts_by_article_id_and_version_map(bq_result)
         assert result == expected_result
+
+
+class TestCrossrefCitationsProvider:
+    def test_happy_path(self):
+        pass
