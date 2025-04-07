@@ -1,5 +1,6 @@
 from typing import Iterable, Mapping
 from data_hub_metrics_api.crossref_citations_provider import (
+    CrossrefCitationsProvider,
     get_citation_counts_by_article_id_and_version_map
 )
 
@@ -28,3 +29,14 @@ class TestGetCitationCountsByArticleIdAndVersionMap:
         expected_result = {('12345', None): 81}
         result = get_citation_counts_by_article_id_and_version_map(bq_result)
         assert result == expected_result
+
+
+class TestCrossrefCitationsProvider:
+    def test_happy_path(self):
+        citation_provider = CrossrefCitationsProvider()
+        result = citation_provider.get_citations_source_metric_for_article_id_and_version('1234', 1)
+        assert result == {
+            "service": "Crossref",
+            "uri": "https://doi.org/10.7554/eLife.1234.1",
+            "citations": 0
+        }
