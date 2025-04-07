@@ -70,6 +70,6 @@ class CrossrefCitationsProvider(CitationsProvider):
         )
         return {
             'service': self.name,
-            'uri': f'https://doi.org/10.7554/elife/{article_id}.{version_number}',
+            'uri': f'https://doi.org/10.7554/eLife.{article_id}.{version_number}',
             'citations': citation_count
         }
