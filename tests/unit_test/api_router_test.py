@@ -43,4 +43,9 @@ class TestProvideCitations:
     def test_should_return_elife_content_type(
         self
     ):
-        assert False
+        client = create_test_client([])
+        response = client.get('/metrics/article/85111/citations/version/2')
+        response.raise_for_status()
+        response_headers = response.headers
+        expected_content_type = 'application/vnd.elife.metric-citations+json; version=2'
+        assert response_headers['Content-Type'] == expected_content_type
