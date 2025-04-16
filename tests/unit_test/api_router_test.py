@@ -2,6 +2,7 @@ from typing import Sequence
 from unittest.mock import MagicMock
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+import pytest
 
 from data_hub_metrics_api.api_router import create_api_router
 from data_hub_metrics_api.citations_provider import CitationsProvider
@@ -37,3 +38,9 @@ class TestProvideCitations:
             .get_citations_source_metric_for_article_id_and_version
             .return_value
         ]
+
+    @pytest.mark.xfail
+    def test_should_return_elife_content_type(
+        self
+    ):
+        assert False
