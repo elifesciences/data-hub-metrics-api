@@ -39,7 +39,6 @@ class TestProvideCitations:
             .return_value
         ]
 
-    @pytest.mark.xfail
     def test_should_return_elife_content_type(
         self
     ):
