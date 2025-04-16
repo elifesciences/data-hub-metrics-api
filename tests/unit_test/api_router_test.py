@@ -2,7 +2,6 @@ from typing import Sequence
 from unittest.mock import MagicMock
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-import pytest
 
 from data_hub_metrics_api.api_router import create_api_router
 from data_hub_metrics_api.citations_provider import CitationsProvider

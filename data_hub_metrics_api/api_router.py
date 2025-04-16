@@ -3,7 +3,6 @@ from fastapi import APIRouter
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
-from data_hub_metrics_api.api_router_typing import CitationsResponseSequence
 from data_hub_metrics_api.citations_provider import CitationsProvider
 
 
@@ -19,6 +18,11 @@ def create_api_router(citations_provider_list: Sequence[CitationsProvider]) -> A
             )
             for citations_provider in citations_provider_list
         ])
-        return JSONResponse(content=json_citation_response, headers={'Content-Type': 'application/vnd.elife.metric-citations+json; version=2'})
+        return JSONResponse(
+            content=json_citation_response,
+            headers={
+                'Content-Type': 'application/vnd.elife.metric-citations+json; version=2'
+            }
+        )
 
     return router
