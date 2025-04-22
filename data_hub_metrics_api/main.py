@@ -11,14 +11,18 @@ from data_hub_metrics_api.crossref_citations_provider import CrossrefCitationsPr
 LOGGER = logging.getLogger(__name__)
 
 
-def create_app():
-    app = FastAPI()
-
-    citations_provider_list = [
+def get_citations_provider_list():
+    return [
         CrossrefCitationsProvider(name="Crossref"),
         DummyCitationsProvider(name="PubMed Central"),
         DummyCitationsProvider(name="Scopus")
     ]
+
+
+def create_app():
+    app = FastAPI()
+
+    citations_provider_list = get_citations_provider_list()
 
     app.include_router(create_api_router(citations_provider_list=citations_provider_list))
 

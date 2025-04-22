@@ -73,3 +73,8 @@ class CrossrefCitationsProvider(CitationsProvider):
             'uri': f'https://doi.org/10.7554/eLife.{article_id}.{version_number}',
             'citations': citation_count
         }
+
+    def refresh_data(
+        self
+    ) -> None:
+        LOGGER.info('Refreshing citation data from BigQuery...')
