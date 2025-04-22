@@ -98,6 +98,13 @@ logs:
 	$(DOCKER_COMPOSE) logs -f
 
 
+start-redis:
+	$(DOCKER_COMPOSE) up -d redis
+
+stop-redis:
+	$(DOCKER_COMPOSE) down redis
+
+
 ci-build:
 	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" build
 
