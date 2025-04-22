@@ -2,7 +2,7 @@ import logging
 
 from pathlib import Path
 from time import monotonic
-from typing import Iterable, Mapping
+from typing import Iterable, Mapping, override
 
 import objsize
 
@@ -74,6 +74,7 @@ class CrossrefCitationsProvider(CitationsProvider):
             'citations': citation_count
         }
 
+    @override
     def refresh_data(
         self
     ) -> None:
