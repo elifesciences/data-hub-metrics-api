@@ -71,9 +71,9 @@ class CrossrefCitationsProvider(CitationsProvider):
         article_id: str,
         version_number: int
     ) -> CitationsSourceMetricTypedDict:
-        citation_count = self.citation_counts_by_article_id_and_version_map.get(
-            (article_id, str(version_number)),
-            0
+        citation_count = self.redis_client.hget(
+            f'article:{article_id}:crossref_citations',
+            str(version_number)
         )
         LOGGER.debug(
             'Citations for article_id=%s, version_number=%d: %d',

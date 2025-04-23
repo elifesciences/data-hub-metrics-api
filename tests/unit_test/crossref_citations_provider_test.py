@@ -20,6 +20,11 @@ def _iter_dict_from_bq_query_mock() -> Iterator[MagicMock]:
         yield mock
 
 
+@pytest.fixture(name='redis_client_mock')
+def _redis_client_mock() -> MagicMock:
+    return MagicMock(name='redis_client')
+
+
 class TestGetCitationCountsByArticleIdAndVersionMap:
     def test_should_return_map_for_valid_data(self):
         bq_result: Iterable[BigQueryResultRow] = [
@@ -47,8 +52,9 @@ class TestGetCitationCountsByArticleIdAndVersionMap:
 
 
 class TestCrossrefCitationsProvider:
-    def test_happy_path(self):
-        citation_provider = CrossrefCitationsProvider(redis_client=MagicMock(name='redis_client'))
+    def test_happy_path(self, redis_client_mock: MagicMock):
+        redis_client_mock.hget.return_value = 0
+        citation_provider = CrossrefCitationsProvider(redis_client=redis_client_mock)
         result = citation_provider.get_citations_source_metric_for_article_id_and_version('1234', 1)
         assert result == {
             "service": "Crossref",
@@ -72,3 +78,22 @@ class TestCrossrefCitationsProvider:
             '1',
             10
         )
+
+    def test_should_get_data_from_redis(
+        self,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.hget.return_value = 10
+        citation_provider = CrossrefCitationsProvider(redis_client=redis_client_mock)
+        result = (
+            citation_provider.get_citations_source_metric_for_article_id_and_version('12345', 1)
+        )
+        redis_client_mock.hget.assert_called_once_with(
+            'article:12345:crossref_citations',
+            '1'
+        )
+        assert result == {
+            "service": "Crossref",
+            "uri": "https://doi.org/10.7554/eLife.12345.1",
+            "citations": 10
+        }
