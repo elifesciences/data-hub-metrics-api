@@ -53,7 +53,7 @@ class TestGetCitationCountsByArticleIdAndVersionMap:
 
 class TestCrossrefCitationsProvider:
     def test_happy_path(self, redis_client_mock: MagicMock):
-        redis_client_mock.hget.return_value = 0
+        redis_client_mock.hget.return_value = b'0'
         citation_provider = CrossrefCitationsProvider(redis_client=redis_client_mock)
         result = citation_provider.get_citations_source_metric_for_article_id_and_version('1234', 1)
         assert result == {
@@ -83,7 +83,7 @@ class TestCrossrefCitationsProvider:
         self,
         redis_client_mock: MagicMock
     ):
-        redis_client_mock.hget.return_value = 10
+        redis_client_mock.hget.return_value = b'10'
         citation_provider = CrossrefCitationsProvider(redis_client=redis_client_mock)
         result = (
             citation_provider.get_citations_source_metric_for_article_id_and_version('12345', 1)
@@ -97,3 +97,14 @@ class TestCrossrefCitationsProvider:
             "uri": "https://doi.org/10.7554/eLife.12345.1",
             "citations": 10
         }
+
+    def test_should_return_zero_for_no_citations(
+        self,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.hget.return_value = None
+        citation_provider = CrossrefCitationsProvider(redis_client=redis_client_mock)
+        result = (
+            citation_provider.get_citations_source_metric_for_article_id_and_version('12345', 1)
+        )
+        assert result['citations'] == 0

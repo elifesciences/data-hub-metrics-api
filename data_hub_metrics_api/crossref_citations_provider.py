@@ -71,10 +71,10 @@ class CrossrefCitationsProvider(CitationsProvider):
         article_id: str,
         version_number: int
     ) -> CitationsSourceMetricTypedDict:
-        citation_count = self.redis_client.hget(
+        citation_count = int(self.redis_client.hget(
             f'article:{article_id}:crossref_citations',
             str(version_number)
-        )
+        ) or b'0')  # type: ignore[arg-type]
         LOGGER.debug(
             'Citations for article_id=%s, version_number=%d: %d',
             article_id,
