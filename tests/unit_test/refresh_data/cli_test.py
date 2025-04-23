@@ -1,9 +1,9 @@
 from typing import Iterable
 from unittest.mock import MagicMock, patch
 import pytest
-from data_hub_metrics_api.update_redis.cli import main
+from data_hub_metrics_api.refresh_data.cli import main
 
-import data_hub_metrics_api.update_redis.cli as cli_module
+import data_hub_metrics_api.refresh_data.cli as cli_module
 
 
 @pytest.fixture(name="get_citations_provider_list_mock", autouse=True)
