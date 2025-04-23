@@ -1,4 +1,5 @@
 from typing import Iterable, Mapping
+from unittest.mock import MagicMock
 
 from data_hub_metrics_api.crossref_citations_provider import (
     BigQueryResultRow,
@@ -35,7 +36,7 @@ class TestGetCitationCountsByArticleIdAndVersionMap:
 
 class TestCrossrefCitationsProvider:
     def test_happy_path(self):
-        citation_provider = CrossrefCitationsProvider()
+        citation_provider = CrossrefCitationsProvider(redis_client=MagicMock(name='redis_client'))
         result = citation_provider.get_citations_source_metric_for_article_id_and_version('1234', 1)
         assert result == {
             "service": "Crossref",

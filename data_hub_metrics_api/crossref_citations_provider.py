@@ -6,6 +6,8 @@ from typing import Iterable, Mapping, Optional, TypedDict, cast, override
 
 import objsize
 
+from redis import Redis
+
 from data_hub_metrics_api.api_router_typing import CitationsSourceMetricTypedDict
 from data_hub_metrics_api.citations_provider import CitationsProvider
 from data_hub_metrics_api.sql import get_sql_path
@@ -32,10 +34,12 @@ def get_citation_counts_by_article_id_and_version_map(
 class CrossrefCitationsProvider(CitationsProvider):
     def __init__(
         self,
+        redis_client: Redis,
         name: str = 'Crossref',
         gcp_project_name: str = 'elife-data-pipeline',
     ) -> None:
         super().__init__(name=name)
+        self.redis_client = redis_client
         self.gcp_project_name = gcp_project_name
         self.crossref_citations_query = (
             Path(get_sql_path('crossref_citations_query.sql')).read_text(encoding='utf-8')

@@ -3,6 +3,7 @@ from typing import Sequence
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from redis import Redis
 
 from data_hub_metrics_api.api_router import create_api_router
 from data_hub_metrics_api.citations_provider import CitationsProvider, DummyCitationsProvider
@@ -14,7 +15,7 @@ LOGGER = logging.getLogger(__name__)
 
 def get_citations_provider_list() -> Sequence[CitationsProvider]:
     return [
-        CrossrefCitationsProvider(name="Crossref"),
+        CrossrefCitationsProvider(name="Crossref", redis_client=Redis()),
         DummyCitationsProvider(name="PubMed Central"),
         DummyCitationsProvider(name="Scopus")
     ]
