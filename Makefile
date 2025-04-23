@@ -61,6 +61,10 @@ dev-start:
 		--log-config=config/logging.yaml
 
 
+dev-refresh-data:
+	$(PYTHON) -m data_hub_metrics_api.refresh_data.cli
+
+
 build:
 	$(DOCKER_COMPOSE) build data-hub-metrics-api
 
