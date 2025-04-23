@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import Sequence
 
 from fastapi import FastAPI
@@ -13,8 +14,20 @@ from data_hub_metrics_api.crossref_citations_provider import CrossrefCitationsPr
 LOGGER = logging.getLogger(__name__)
 
 
+class RedisEnvironmentVariables:
+    HOST = 'REDIS_HOST'
+    PORT = 'REDIS_PORT'
+
+
+DEFAULT_REDIS_HOST = 'localhost'
+DEFAULT_REDIS_PORT = 6379
+
+
 def get_redis_client() -> Redis:
-    redis_client = Redis()
+    host = os.getenv(RedisEnvironmentVariables.HOST) or DEFAULT_REDIS_HOST
+    port = int(os.getenv(RedisEnvironmentVariables.PORT) or DEFAULT_REDIS_PORT)
+    LOGGER.info('Connecting Redis to %s:%s', host, port)
+    redis_client = Redis(host=host, port=port)
     redis_client.ping()
     return redis_client
 

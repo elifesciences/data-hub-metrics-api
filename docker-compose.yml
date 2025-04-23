@@ -4,6 +4,9 @@ services:
             context: .
             dockerfile: Dockerfile
         image: ${IMAGE_REPO}:${IMAGE_TAG}
+        environment:
+            - REDIS_HOST=redis
+            - REDIS_PORT=6379
 
     data-hub-metrics-api-dev:
         build:
