@@ -43,3 +43,13 @@ class TestCrossrefCitationsProvider:
             "uri": "https://doi.org/10.7554/eLife.1234.1",
             "citations": 0
         }
+
+    def test_should_put_data_in_redis(self):
+        redis_client = MagicMock(name='redis_client')
+        citation_provider = CrossrefCitationsProvider(redis_client=redis_client)
+        citation_provider.refresh_data()
+        redis_client.hset.assert_called_once_with(
+            'article:12345:crossref_citations',
+            '1',
+            123
+        )

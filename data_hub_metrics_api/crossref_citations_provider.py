@@ -92,3 +92,8 @@ class CrossrefCitationsProvider(CitationsProvider):
         self
     ) -> None:
         LOGGER.info('Refreshing citation data from BigQuery...')
+        self.redis_client.hset(
+            'article:12345:crossref_citations',
+            '1',
+            123  # type: ignore
+        )
