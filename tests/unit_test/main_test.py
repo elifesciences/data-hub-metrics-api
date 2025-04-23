@@ -8,7 +8,7 @@ from data_hub_metrics_api import main as main_module
 from data_hub_metrics_api.main import RedisEnvironmentVariables, create_app, get_redis_client
 
 
-@pytest.fixture(name='redis_class_mock')
+@pytest.fixture(name='redis_class_mock', autouse=True)
 def _redis_class_mock() -> Iterator[MagicMock]:
     with patch.object(main_module, 'Redis') as redis_class_mock:
         yield redis_class_mock
