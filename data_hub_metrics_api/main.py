@@ -13,9 +13,15 @@ from data_hub_metrics_api.crossref_citations_provider import CrossrefCitationsPr
 LOGGER = logging.getLogger(__name__)
 
 
+def get_redis_client() -> Redis:
+    redis_client = Redis()
+    redis_client.ping()
+    return redis_client
+
+
 def get_citations_provider_list() -> Sequence[CitationsProvider]:
     return [
-        CrossrefCitationsProvider(name="Crossref", redis_client=Redis()),
+        CrossrefCitationsProvider(name="Crossref", redis_client=get_redis_client()),
         DummyCitationsProvider(name="PubMed Central"),
         DummyCitationsProvider(name="Scopus")
     ]
