@@ -1,11 +1,23 @@
-from typing import Iterable, Mapping
-from unittest.mock import MagicMock
+from typing import Iterable, Iterator, Mapping
+from unittest.mock import MagicMock, patch
 
+import pytest
+
+from data_hub_metrics_api import crossref_citations_provider as crossref_citations_provider_module
 from data_hub_metrics_api.crossref_citations_provider import (
     BigQueryResultRow,
     CrossrefCitationsProvider,
     get_citation_counts_by_article_id_and_version_map
 )
+
+
+@pytest.fixture(name='iter_dict_from_bq_query_mock', autouse=True)
+def _iter_dict_from_bq_query_mock() -> Iterator[MagicMock]:
+    with patch.object(
+        crossref_citations_provider_module,
+        'iter_dict_from_bq_query'
+    ) as mock:
+        yield mock
 
 
 class TestGetCitationCountsByArticleIdAndVersionMap:
@@ -44,12 +56,19 @@ class TestCrossrefCitationsProvider:
             "citations": 0
         }
 
-    def test_should_put_data_in_redis(self):
+    def test_should_put_data_in_redis(
+        self,
+        iter_dict_from_bq_query_mock: MagicMock
+    ):
+        bq_result: Iterable[BigQueryResultRow] = [
+            {'article_id': '12345', 'version_number': '1', 'citation_count': 10},
+        ]
+        iter_dict_from_bq_query_mock.return_value = bq_result
         redis_client = MagicMock(name='redis_client')
         citation_provider = CrossrefCitationsProvider(redis_client=redis_client)
         citation_provider.refresh_data()
         redis_client.hset.assert_called_once_with(
             'article:12345:crossref_citations',
             '1',
-            123
+            10
         )

@@ -92,8 +92,16 @@ class CrossrefCitationsProvider(CitationsProvider):
         self
     ) -> None:
         LOGGER.info('Refreshing citation data from BigQuery...')
-        self.redis_client.hset(
-            'article:12345:crossref_citations',
-            '1',
-            123  # type: ignore
+        bq_result = cast(
+            Iterable[BigQueryResultRow],
+            iter_dict_from_bq_query(
+                self.gcp_project_name,
+                self.crossref_citations_query
+            )
         )
+        for row in bq_result:
+            self.redis_client.hset(
+                f'article:{row['article_id']}:crossref_citations',
+                row.get('version_number') or '',
+                row['citation_count']  # type: ignore[arg-type]
+            )
