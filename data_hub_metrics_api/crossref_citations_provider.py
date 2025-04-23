@@ -2,7 +2,7 @@ import logging
 
 from pathlib import Path
 from time import monotonic
-from typing import Iterable, Mapping, override
+from typing import Iterable, Mapping, Optional, TypedDict, cast, override
 
 import objsize
 
@@ -14,9 +14,15 @@ from data_hub_metrics_api.utils.bigquery import iter_dict_from_bq_query
 LOGGER = logging.getLogger(__name__)
 
 
+class BigQueryResultRow(TypedDict):
+    article_id: str
+    version_number: Optional[str]
+    citation_count: int
+
+
 def get_citation_counts_by_article_id_and_version_map(
-    bq_result: Iterable[dict]
-) -> Mapping[tuple[str, str], int]:
+    bq_result: Iterable[BigQueryResultRow]
+) -> Mapping[tuple[str, Optional[str]], int]:
     return {
         (row['article_id'], row['version_number']): row['citation_count']
         for row in bq_result
@@ -36,12 +42,15 @@ class CrossrefCitationsProvider(CitationsProvider):
         )
         self.citation_counts_by_article_id_and_version_map = self._load_query_results_from_bq()
 
-    def _load_query_results_from_bq(self) -> Mapping[tuple[str, str], int]:
+    def _load_query_results_from_bq(self) -> Mapping[tuple[str, Optional[str]], int]:
         LOGGER.info('Loading query results from BigQuery...')
         start_time = monotonic()
-        bq_result = iter_dict_from_bq_query(
-            self.gcp_project_name,
-            self.crossref_citations_query
+        bq_result = cast(
+            Iterable[BigQueryResultRow],
+            iter_dict_from_bq_query(
+                self.gcp_project_name,
+                self.crossref_citations_query
+            )
         )
         result = get_citation_counts_by_article_id_and_version_map(bq_result)
         end_time = monotonic()
