@@ -7,9 +7,10 @@ LOGGER = logging.getLogger(__name__)
 
 def main():
     citations_provider_list = get_citations_provider_list()
+    LOGGER.info('Refreshing data from BigQuery...')
     for provider in citations_provider_list:
         provider.refresh_data()
-    LOGGER.info('Updating redis (dummy implementation)...')
+    LOGGER.info('Refreshing data from BigQuery completed.')
 
 
 if __name__ == "__main__":
