@@ -26,7 +26,17 @@ make dev-install
 make dev-test
 ```
 
+### Start Server Redis Only (using Docker)
+
+```bash
+make start-redis
+```
+
+The server will be available on port 6379.
+
 ### Start Server (Virtual Environment)
+
+This will require redis to be available on `localhost` (port `6379`).
 
 ```bash
 make dev-start
