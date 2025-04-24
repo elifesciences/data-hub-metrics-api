@@ -46,6 +46,16 @@ The server will be available on port 8000.
 
 You can access the API Docs via [/docs](http://localhost:8000/docs)
 
+### Refresh Data (Virtual Environment)
+
+This will require redis to be available on `localhost` (port `6379`).
+
+```bash
+make dev-refresh-data
+```
+
+This will load data from BigQuery into Redis.
+
 ## Development Using Docker
 
 ### Pre-requisites (Docker)
