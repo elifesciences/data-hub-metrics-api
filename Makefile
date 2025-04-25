@@ -61,6 +61,10 @@ dev-start:
 		--log-config=config/logging.yaml
 
 
+dev-refresh-data:
+	$(PYTHON) -m data_hub_metrics_api.refresh_data.cli
+
+
 build:
 	$(DOCKER_COMPOSE) build data-hub-metrics-api
 
@@ -96,6 +100,13 @@ stop:
 
 logs:
 	$(DOCKER_COMPOSE) logs -f
+
+
+start-redis:
+	$(DOCKER_COMPOSE) up -d redis
+
+stop-redis:
+	$(DOCKER_COMPOSE) down redis
 
 
 ci-build:

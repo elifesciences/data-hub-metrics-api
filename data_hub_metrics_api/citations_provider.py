@@ -16,6 +16,11 @@ class CitationsProvider(ABC):
     ) -> CitationsSourceMetricTypedDict:
         pass
 
+    def refresh_data(
+        self
+    ):
+        pass
+
 
 class DummyCitationsProvider(CitationsProvider):
     def get_citations_source_metric_for_article_id_and_version(

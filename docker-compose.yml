@@ -4,6 +4,9 @@ services:
             context: .
             dockerfile: Dockerfile
         image: ${IMAGE_REPO}:${IMAGE_TAG}
+        environment:
+            - REDIS_HOST=redis
+            - REDIS_PORT=6379
 
     data-hub-metrics-api-dev:
         build:
@@ -14,3 +17,14 @@ services:
         image:  ${IMAGE_REPO}-dev:${IMAGE_TAG}
         command: /bin/sh -c exit 0
         entrypoint: []
+
+    redis:
+        image: redis:7.4.2
+        ports:
+            - "6379:6379"
+        volumes:
+            - redis-data:/data
+
+volumes:
+    redis-data:
+        driver: local

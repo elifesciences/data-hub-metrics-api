@@ -2,11 +2,21 @@
 
 Provides an API similar to `elife-metrics` but powered by Data Hub.
 
+## Configuration
+
+Environment variables:
+
+| Name | Description | Default Value |
+| ---- | ----------- | ------------- |
+| REDIS_HOST | The hostname for redis | localhost |
+| REDIS_POST | The port for redis | 6379 |
+
 ## Development Using Virtual Environment
 
 ### Pre-requisites (Virtual Environment)
 
 * Python, ideally using `pyenv` (see `.python-version`)
+* Docker to run Redis
 
 ### First Setup (Virtual Environment)
 
@@ -26,7 +36,17 @@ make dev-install
 make dev-test
 ```
 
+### Start Server Redis Only (using Docker)
+
+```bash
+make start-redis
+```
+
+The server will be available on port 6379.
+
 ### Start Server (Virtual Environment)
+
+This will require redis to be available on `localhost` (port `6379`).
 
 ```bash
 make dev-start
@@ -35,6 +55,16 @@ make dev-start
 The server will be available on port 8000.
 
 You can access the API Docs via [/docs](http://localhost:8000/docs)
+
+### Refresh Data (Virtual Environment)
+
+This will require redis to be available on `localhost` (port `6379`).
+
+```bash
+make dev-refresh-data
+```
+
+This will load data from BigQuery into Redis.
 
 ## Development Using Docker
 
