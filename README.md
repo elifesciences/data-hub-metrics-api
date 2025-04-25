@@ -2,6 +2,15 @@
 
 Provides an API similar to `elife-metrics` but powered by Data Hub.
 
+## Configuration
+
+Environment variables:
+
+| Name | Description | Default Value |
+| ---- | ----------- | ------------- |
+| REDIS_HOST | The hostname for redis | localhost |
+| REDIS_POST | The port for redis | 6379 |
+
 ## Development Using Virtual Environment
 
 ### Pre-requisites (Virtual Environment)
