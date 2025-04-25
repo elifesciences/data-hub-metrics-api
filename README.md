@@ -7,6 +7,7 @@ Provides an API similar to `elife-metrics` but powered by Data Hub.
 ### Pre-requisites (Virtual Environment)
 
 * Python, ideally using `pyenv` (see `.python-version`)
+* Docker to run Redis
 
 ### First Setup (Virtual Environment)
 
