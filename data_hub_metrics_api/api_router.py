@@ -28,9 +28,8 @@ def create_api_router(citations_provider_list: Sequence[CitationsProvider]) -> A
     @router.get('/metrics/article/{article_id}/citations')
     def provide_combined_citations(article_id: str) -> JSONResponse:
         json_citation_response = jsonable_encoder([
-            citations_provider.get_citations_source_metric_for_article_id_and_version(
-                article_id=article_id,
-                version_number=1
+            citations_provider.get_combined_citations_source_metric_for_article_id(
+                article_id=article_id
             )
             for citations_provider in citations_provider_list
         ])

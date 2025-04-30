@@ -54,6 +54,15 @@ class CrossrefCitationsProvider(CitationsProvider):
             'citations': citation_count
         }
 
+    def get_combined_citations_source_metric_for_article_id(
+        self,
+        article_id: str
+    ) -> CitationsSourceMetricTypedDict:
+        return self.get_citations_source_metric_for_article_id_and_version(
+            article_id=article_id,
+            version_number=1
+        )
+
     @override
     def refresh_data(
         self

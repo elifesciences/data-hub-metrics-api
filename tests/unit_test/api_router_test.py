@@ -15,7 +15,7 @@ def create_test_client(citations_provider_list: Sequence[CitationsProvider]) -> 
 
 
 class TestProvideCitations:
-    def test_should_return_citation_counts(
+    def test_should_return_citation_counts_for_article_and_version(
         self
     ):
         citations_provider_mock = MagicMock(spec=CitationsProvider)
@@ -35,6 +35,29 @@ class TestProvideCitations:
         assert actual_response_json == [
             citations_provider_mock
             .get_citations_source_metric_for_article_id_and_version
+            .return_value
+        ]
+
+    def test_should_return_combined_citation_counts_for_article(
+        self
+    ):
+        citations_provider_mock = MagicMock(spec=CitationsProvider)
+        (
+            citations_provider_mock
+            .get_combined_citations_source_metric_for_article_id
+            .return_value
+        ) = {
+            "service": "Crossref",
+            "uri": "https://doi.org/10.7554/eLife.85111",
+            "citations": 7
+        }
+        client = create_test_client(citations_provider_list=[citations_provider_mock])
+        response = client.get('/metrics/article/85111/citations')
+        response.raise_for_status()
+        actual_response_json = response.json()
+        assert actual_response_json == [
+            citations_provider_mock
+            .get_combined_citations_source_metric_for_article_id
             .return_value
         ]
 
