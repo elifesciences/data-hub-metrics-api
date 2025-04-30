@@ -71,7 +71,7 @@ class TestCrossrefCitationsProvider:
             "citations": 10
         }
 
-    def test_should_return_zero_for_no_citations(
+    def test_should_return_zero_for_no_citations_by_version(
         self,
         redis_client_mock: MagicMock
     ):
@@ -97,3 +97,14 @@ class TestCrossrefCitationsProvider:
             "uri": "https://doi.org/10.7554/eLife.12345",
             "citations": 12 + 8 + 43 + 3
         }
+
+    def test_should_return_zero_for_no_citations_by_article_id(
+        self,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.hgetall.return_value = {}
+        citation_provider = CrossrefCitationsProvider(redis_client=redis_client_mock)
+        result = (
+            citation_provider.get_combined_citations_source_metric_for_article_id('12345')
+        )
+        assert result['citations'] == 0
