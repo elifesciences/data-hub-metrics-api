@@ -52,7 +52,7 @@ class TestCrossrefCitationsProvider:
             10
         )
 
-    def test_should_get_data_from_redis(
+    def test_should_get_data_from_redis_by_version(
         self,
         redis_client_mock: MagicMock
     ):
@@ -81,3 +81,19 @@ class TestCrossrefCitationsProvider:
             citation_provider.get_citations_source_metric_for_article_id_and_version('12345', 1)
         )
         assert result['citations'] == 0
+
+    def test_should_get_data_from_redis_by_article_id(
+        self,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.hgetall.return_value = {b'1': b'12', b'2': b'8', b'': b'43', b'3': b'3'}
+        citation_provider = CrossrefCitationsProvider(redis_client=redis_client_mock)
+        result = (
+            citation_provider.get_combined_citations_source_metric_for_article_id('12345')
+        )
+        redis_client_mock.hgetall.assert_called_once_with('article:12345:crossref_citations')
+        assert result == {
+            "service": "Crossref",
+            "uri": "https://doi.org/10.7554/eLife.12345",
+            "citations": 12 + 8 + 43 + 3
+        }
