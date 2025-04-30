@@ -16,6 +16,13 @@ class CitationsProvider(ABC):
     ) -> CitationsSourceMetricTypedDict:
         pass
 
+    @abstractmethod
+    def get_combined_citations_source_metric_for_article_id(
+        self,
+        article_id: str
+    ) -> CitationsSourceMetricTypedDict:
+        pass
+
     def refresh_data(
         self
     ):
@@ -27,6 +34,16 @@ class DummyCitationsProvider(CitationsProvider):
         self,
         article_id: str,
         version_number: int
+    ) -> CitationsSourceMetricTypedDict:
+        return {
+            "service": self.name,
+            "uri": "",
+            "citations": 0
+        }
+
+    def get_combined_citations_source_metric_for_article_id(
+        self,
+        article_id: str
     ) -> CitationsSourceMetricTypedDict:
         return {
             "service": self.name,

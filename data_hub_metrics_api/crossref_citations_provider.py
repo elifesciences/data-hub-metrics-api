@@ -54,6 +54,26 @@ class CrossrefCitationsProvider(CitationsProvider):
             'citations': citation_count
         }
 
+    def get_combined_citations_source_metric_for_article_id(
+        self,
+        article_id: str
+    ) -> CitationsSourceMetricTypedDict:
+        citation_count = sum(
+            int(count) for count in self.redis_client.hgetall(  # type: ignore[misc,union-attr]
+                f'article:{article_id}:crossref_citations'
+            ).values()
+        )
+        LOGGER.debug(
+            'Combined citations for article_id=%s: %d',
+            article_id,
+            citation_count
+        )
+        return {
+            'service': self.name,
+            'uri': f'https://doi.org/10.7554/eLife.{article_id}',
+            'citations': citation_count
+        }
+
     @override
     def refresh_data(
         self
