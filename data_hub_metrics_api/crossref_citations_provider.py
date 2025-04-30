@@ -59,9 +59,9 @@ class CrossrefCitationsProvider(CitationsProvider):
         article_id: str
     ) -> CitationsSourceMetricTypedDict:
         citation_count = sum(
-            int(count) for count in self.redis_client.hgetall(
+            int(count) for count in self.redis_client.hgetall(  # type: ignore[misc,union-attr]
                 f'article:{article_id}:crossref_citations'
-            ).values()  # type: ignore[arg-type]
+            ).values()
         )
         LOGGER.debug(
             'Combined citations for article_id=%s: %d',
