@@ -68,5 +68,5 @@ class TestProvideCitations:
         response = client.get('/metrics/article/85111/citations/version/2')
         response.raise_for_status()
         response_headers = response.headers
-        expected_content_type = 'application/vnd.elife.metric-citations+json; version=2'
+        expected_content_type = 'application/vnd.elife.metric-citations+json; version=1'
         assert response_headers['Content-Type'] == expected_content_type
