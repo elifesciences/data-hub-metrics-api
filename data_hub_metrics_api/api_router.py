@@ -21,7 +21,7 @@ def create_api_router(citations_provider_list: Sequence[CitationsProvider]) -> A
         return JSONResponse(
             content=json_citation_response,
             headers={
-                'Content-Type': 'application/vnd.elife.metric-citations+json; version=2'
+                'Content-Type': 'application/vnd.elife.metric-citations+json; version=1'
             }
         )
 
@@ -36,7 +36,7 @@ def create_api_router(citations_provider_list: Sequence[CitationsProvider]) -> A
         return JSONResponse(
             content=json_citation_response,
             headers={
-                'Content-Type': 'application/vnd.elife.metric-citations+json; version=2'
+                'Content-Type': 'application/vnd.elife.metric-citations+json; version=1'
             }
         )
 
