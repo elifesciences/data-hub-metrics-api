@@ -1,4 +1,8 @@
-SELECT * FROM (
+SELECT
+  article_id,
+  version_number,
+  SUM(citation_count) AS citation_count
+FROM (
   SELECT 
     is_referenced_by_count AS citation_count,
     REGEXP_EXTRACT(LOWER(DOI), r'10\.7554\/elife\.(\d{5,6})') AS article_id,
@@ -9,3 +13,4 @@ SELECT * FROM (
     AND COALESCE(is_referenced_by_count, 0) > 0
 )
 WHERE article_id IS NOT NULL
+GROUP BY article_id, version_number
