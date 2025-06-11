@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
+from data_hub_metrics_api.api_router_typing import MetricTimePeriodResponseTypedDict
 from data_hub_metrics_api.citations_provider import CitationsProvider
 
 
@@ -39,5 +40,13 @@ def create_api_router(citations_provider_list: Sequence[CitationsProvider]) -> A
                 'Content-Type': 'application/vnd.elife.metric-citations+json; version=1'
             }
         )
+
+    @router.get('/metrics/article/{article_id}/downloads')
+    def provide_downloads(_article_id: str) -> MetricTimePeriodResponseTypedDict:
+        return {
+            'totalPeriods': 0,
+            'totalValue': 0,
+            'periods': []
+        }
 
     return router

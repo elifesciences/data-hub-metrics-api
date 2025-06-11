@@ -8,3 +8,14 @@ class CitationsSourceMetricTypedDict(TypedDict):
 
 
 CitationsResponseSequence = Sequence[CitationsSourceMetricTypedDict]
+
+
+class MetricTimePeriodItemTypedDict(TypedDict):
+    period: str  # either 'YYYY-MM' or 'YYYY-MM-DD'
+    value: int
+
+
+class MetricTimePeriodResponseTypedDict(TypedDict):
+    totalPeriods: int
+    totalValue: int
+    periods: Sequence[MetricTimePeriodItemTypedDict]
