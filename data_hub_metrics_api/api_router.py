@@ -1,10 +1,14 @@
-from typing import Sequence
+import logging
+from typing import Literal, Sequence
 from fastapi import APIRouter
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
 from data_hub_metrics_api.api_router_typing import MetricTimePeriodResponseTypedDict
 from data_hub_metrics_api.citations_provider import CitationsProvider
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def create_api_router(citations_provider_list: Sequence[CitationsProvider]) -> APIRouter:
@@ -42,7 +46,11 @@ def create_api_router(citations_provider_list: Sequence[CitationsProvider]) -> A
         )
 
     @router.get('/metrics/article/{article_id}/downloads')
-    def provide_downloads(_article_id: str) -> MetricTimePeriodResponseTypedDict:
+    def provide_downloads(
+        article_id: str,
+        by: Literal['day', 'month'] = 'day'
+    ) -> MetricTimePeriodResponseTypedDict:
+        LOGGER.info('downloads: article_id=%r, by=%r', article_id, by)
         return {
             'totalPeriods': 0,
             'totalValue': 0,
@@ -50,7 +58,11 @@ def create_api_router(citations_provider_list: Sequence[CitationsProvider]) -> A
         }
 
     @router.get('/metrics/article/{article_id}/page-views')
-    def provide_page_views(_article_id: str) -> MetricTimePeriodResponseTypedDict:
+    def provide_page_views(
+        article_id: str,
+        by: Literal['day', 'month'] = 'day'
+    ) -> MetricTimePeriodResponseTypedDict:
+        LOGGER.info('downloads: article_id=%r, by=%r', article_id, by)
         return {
             'totalPeriods': 0,
             'totalValue': 0,
