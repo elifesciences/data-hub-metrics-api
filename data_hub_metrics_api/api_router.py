@@ -49,4 +49,12 @@ def create_api_router(citations_provider_list: Sequence[CitationsProvider]) -> A
             'periods': []
         }
 
+    @router.get('/metrics/article/{article_id}/page-views')
+    def provide_page_views(_article_id: str) -> MetricTimePeriodResponseTypedDict:
+        return {
+            'totalPeriods': 0,
+            'totalValue': 0,
+            'periods': []
+        }
+
     return router
