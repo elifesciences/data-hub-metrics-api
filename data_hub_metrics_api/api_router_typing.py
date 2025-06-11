@@ -19,3 +19,17 @@ class MetricTimePeriodResponseTypedDict(TypedDict):
     totalPeriods: int
     totalValue: int
     periods: Sequence[MetricTimePeriodItemTypedDict]
+
+
+class MetricSummaryItemTypedDict(TypedDict):
+    id: int
+    views: int
+    downloads: int
+    crossref: int
+    pubmed: int
+    scopus: int
+
+
+class MetricSummaryResponseTypedDict(TypedDict):
+    total: int
+    items: Sequence[MetricSummaryItemTypedDict]
