@@ -5,8 +5,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
 from data_hub_metrics_api.api_router_typing import (
-    MetricSummaryResponseTypedDict,
-    MetricTimePeriodResponseTypedDict
+    MetricSummaryResponseTypedDict
 )
 from data_hub_metrics_api.citations_provider import CitationsProvider
 
@@ -23,6 +22,10 @@ ContentTypeLiteral = Literal[
     'interview',
     'press-package'
 ]
+
+
+class MetricTimePeriodJsonResponse(JSONResponse):
+    media_type = 'application/vnd.elife.metric-time-period+json;version=1'
 
 
 def create_api_router(citations_provider_list: Sequence[CitationsProvider]) -> APIRouter:
@@ -63,25 +66,29 @@ def create_api_router(citations_provider_list: Sequence[CitationsProvider]) -> A
     def provide_downloads(
         article_id: str,
         by: Literal['day', 'month'] = 'day'
-    ) -> MetricTimePeriodResponseTypedDict:
+    ) -> MetricTimePeriodJsonResponse:
         LOGGER.info('downloads: article_id=%r, by=%r', article_id, by)
-        return {
-            'totalPeriods': 0,
-            'totalValue': 0,
-            'periods': []
-        }
+        return MetricTimePeriodJsonResponse(
+            content={
+                'totalPeriods': 0,
+                'totalValue': 0,
+                'periods': []
+            }
+        )
 
     @router.get('/metrics/article/{article_id}/page-views')
     def provide_page_views(
         article_id: str,
         by: Literal['day', 'month'] = 'day'
-    ) -> MetricTimePeriodResponseTypedDict:
+    ) -> MetricTimePeriodJsonResponse:
         LOGGER.info('page-views: article_id=%r, by=%r', article_id, by)
-        return {
-            'totalPeriods': 0,
-            'totalValue': 0,
-            'periods': []
-        }
+        return MetricTimePeriodJsonResponse(
+            content={
+                'totalPeriods': 0,
+                'totalValue': 0,
+                'periods': []
+            }
+        )
 
     @router.get('/metrics/article/{article_id}/summary')
     def provide_summary(
@@ -105,17 +112,19 @@ def create_api_router(citations_provider_list: Sequence[CitationsProvider]) -> A
         content_type: ContentTypeLiteral,
         content_id: str,
         by: Literal['day', 'month'] = 'day'
-    ) -> MetricTimePeriodResponseTypedDict:
+    ) -> MetricTimePeriodJsonResponse:
         LOGGER.info(
             'page-views: content_type=%r, content_id=%r, by=%r',
             content_type,
             content_id,
             by
         )
-        return {
-            'totalPeriods': 0,
-            'totalValue': 0,
-            'periods': []
-        }
+        return MetricTimePeriodJsonResponse(
+            content={
+                'totalPeriods': 0,
+                'totalValue': 0,
+                'periods': []
+            }
+        )
 
     return router
