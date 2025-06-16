@@ -10,6 +10,7 @@ from data_hub_metrics_api.api_router_typing import (
     MetricTimePeriodResponseTypedDict
 )
 from data_hub_metrics_api.citations_provider import CitationsProvider
+from data_hub_metrics_api.page_views_provider import PageViewsProvider
 
 
 LOGGER = logging.getLogger(__name__)
@@ -46,7 +47,11 @@ class MetricTimePeriodJsonResponse(JSONResponse):
     media_type = 'application/vnd.elife.metric-time-period+json;version=1'
 
 
-def create_api_router(citations_provider_list: Sequence[CitationsProvider]) -> APIRouter:
+def create_api_router(
+    citations_provider_list: Sequence[CitationsProvider],
+    page_views_provider: PageViewsProvider
+) -> APIRouter:
+    assert page_views_provider is not None
     router = APIRouter()
 
     @router.get(
