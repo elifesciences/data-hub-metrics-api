@@ -5,6 +5,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
 from data_hub_metrics_api.api_router_typing import (
+    CitationsResponseSequence,
     MetricSummaryResponseTypedDict,
     MetricTimePeriodResponseTypedDict
 )
@@ -25,6 +26,10 @@ ContentTypeLiteral = Literal[
 ]
 
 
+class CitationsJsonResponse(JSONResponse):
+    media_type = 'application/vnd.elife.metric-citations+json; version=1'
+
+
 class MetricTimePeriodJsonResponse(JSONResponse):
     media_type = 'application/vnd.elife.metric-time-period+json;version=1'
 
@@ -32,8 +37,11 @@ class MetricTimePeriodJsonResponse(JSONResponse):
 def create_api_router(citations_provider_list: Sequence[CitationsProvider]) -> APIRouter:
     router = APIRouter()
 
-    @router.get('/metrics/article/{article_id}/citations/version/{version_number}')
-    def provide_citations(article_id: str, version_number: int) -> JSONResponse:
+    @router.get(
+        '/metrics/article/{article_id}/citations/version/{version_number}',
+        response_class=CitationsJsonResponse
+    )
+    def provide_citations(article_id: str, version_number: int) -> CitationsResponseSequence:
         json_citation_response = jsonable_encoder([
             citations_provider.get_citations_source_metric_for_article_id_and_version(
                 article_id=article_id,
@@ -41,27 +49,20 @@ def create_api_router(citations_provider_list: Sequence[CitationsProvider]) -> A
             )
             for citations_provider in citations_provider_list
         ])
-        return JSONResponse(
-            content=json_citation_response,
-            headers={
-                'Content-Type': 'application/vnd.elife.metric-citations+json; version=1'
-            }
-        )
+        return json_citation_response
 
-    @router.get('/metrics/article/{article_id}/citations')
-    def provide_combined_citations(article_id: str) -> JSONResponse:
+    @router.get(
+        '/metrics/article/{article_id}/citations',
+        response_class=CitationsJsonResponse
+    )
+    def provide_combined_citations(article_id: str) -> CitationsResponseSequence:
         json_citation_response = jsonable_encoder([
             citations_provider.get_combined_citations_source_metric_for_article_id(
                 article_id=article_id
             )
             for citations_provider in citations_provider_list
         ])
-        return JSONResponse(
-            content=json_citation_response,
-            headers={
-                'Content-Type': 'application/vnd.elife.metric-citations+json; version=1'
-            }
-        )
+        return json_citation_response
 
     @router.get(
         '/metrics/article/{article_id}/downloads',
