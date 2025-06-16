@@ -4,11 +4,25 @@ from fastapi import APIRouter
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
-from data_hub_metrics_api.api_router_typing import MetricTimePeriodResponseTypedDict
+from data_hub_metrics_api.api_router_typing import (
+    MetricSummaryResponseTypedDict,
+    MetricTimePeriodResponseTypedDict
+)
 from data_hub_metrics_api.citations_provider import CitationsProvider
 
 
 LOGGER = logging.getLogger(__name__)
+
+
+ContentTypeLiteral = Literal[
+    'blog-article',
+    'labs-post',
+    'collection',
+    'digest',
+    'event',
+    'interview',
+    'press-package'
+]
 
 
 def create_api_router(citations_provider_list: Sequence[CitationsProvider]) -> APIRouter:
@@ -72,18 +86,36 @@ def create_api_router(citations_provider_list: Sequence[CitationsProvider]) -> A
     @router.get('/metrics/article/{article_id}/summary')
     def provide_summary(
         article_id: str
-    ) -> MetricTimePeriodResponseTypedDict:
+    ) -> MetricSummaryResponseTypedDict:
         LOGGER.info('summary: article_id=%r', article_id)
         return {
             "total": 1,
             "items": [{
-                "id": article_id,
+                "id": int(article_id),
                 "views": 0,
                 "downloads": 0,
                 "crossref": 0,
                 "pubmed": 0,
                 "scopus": 0
             }]
+        }
+
+    @router.get('/metrics/{content_type}/{content_id}/page-views')
+    def provide_page_views_by_content_type(
+        content_type: ContentTypeLiteral,
+        content_id: str,
+        by: Literal['day', 'month'] = 'day'
+    ) -> MetricTimePeriodResponseTypedDict:
+        LOGGER.info(
+            'page-views: content_type=%r, content_id=%r, by=%r',
+            content_type,
+            content_id,
+            by
+        )
+        return {
+            'totalPeriods': 0,
+            'totalValue': 0,
+            'periods': []
         }
 
     return router
