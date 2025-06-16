@@ -82,9 +82,14 @@ def create_api_router(citations_provider_list: Sequence[CitationsProvider]) -> A
     )
     def provide_downloads(
         article_id: str,
-        by: Literal['day', 'month'] = 'day'
+        by: Literal['day', 'month'] = 'day',
+        per_page: PerPageQueryType = 20,
+        page: PageQueryType = 1
     ) -> MetricTimePeriodResponseTypedDict:
-        LOGGER.info('downloads: article_id=%r, by=%r', article_id, by)
+        LOGGER.info(
+            'downloads: article_id=%r, by=%r, per_page=%r, page=%r',
+            article_id, by, per_page, page
+        )
         return {
             'totalPeriods': 0,
             'totalValue': 0,
@@ -97,9 +102,14 @@ def create_api_router(citations_provider_list: Sequence[CitationsProvider]) -> A
     )
     def provide_page_views(
         article_id: str,
-        by: Literal['day', 'month'] = 'day'
+        by: Literal['day', 'month'] = 'day',
+        per_page: PerPageQueryType = 20,
+        page: PageQueryType = 1
     ) -> MetricTimePeriodResponseTypedDict:
-        LOGGER.info('page-views: article_id=%r, by=%r', article_id, by)
+        LOGGER.info(
+            'page-views: article_id=%r, by=%r, per_page=%r, page=%r',
+            article_id, by, per_page, page
+        )
         return {
             'totalPeriods': 0,
             'totalValue': 0,
