@@ -1,6 +1,6 @@
 import logging
-from typing import Literal, Sequence
-from fastapi import APIRouter
+from typing import Annotated, Literal, Sequence
+from fastapi import APIRouter, Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
@@ -23,6 +23,18 @@ ContentTypeLiteral = Literal[
     'event',
     'interview',
     'press-package'
+]
+
+PerPageQueryType = Annotated[
+    int,
+    # ge = greater than or equal to, le = less than or equal to
+    Query(alias='per-page', ge=1, le=100)
+]
+
+PageQueryType = Annotated[
+    int,
+    # ge = greater than or equal to
+    Query(alias='page', ge=1)
 ]
 
 
@@ -92,6 +104,24 @@ def create_api_router(citations_provider_list: Sequence[CitationsProvider]) -> A
             'totalPeriods': 0,
             'totalValue': 0,
             'periods': []
+        }
+
+    @router.get('/metrics/article/summary')
+    def provide_summary_for_all_articles(
+        per_page: PerPageQueryType = 20,
+        page: PageQueryType = 1
+    ) -> MetricSummaryResponseTypedDict:
+        LOGGER.info('summary: per_page=%r, page=%r', per_page, page)
+        return {
+            "total": 1,
+            "items": [{
+                "id": 12345,
+                "views": 0,
+                "downloads": 0,
+                "crossref": 0,
+                "pubmed": 0,
+                "scopus": 0
+            }]
         }
 
     @router.get('/metrics/article/{article_id}/summary')
