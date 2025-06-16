@@ -11,8 +11,8 @@ from data_hub_metrics_api.page_views_provider import PageViewsProvider
 
 
 METRIC_TIME_PERIOD_RESPONSE_DICT_1: MetricTimePeriodResponseTypedDict = {
-    'totalPeriods': 0,
-    'totalValue': 0,
+    'totalPeriods': 1,
+    'totalValue': 1,
     'periods': []
 }
 
