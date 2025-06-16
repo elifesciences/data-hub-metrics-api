@@ -48,7 +48,7 @@ def create_app():
 
     app.include_router(create_api_router(
         citations_provider_list=citations_provider_list,
-        page_views_provider=PageViewsProvider()
+        page_views_provider=PageViewsProvider(get_redis_client())
     ))
 
     app.mount('/', StaticFiles(directory='static', html=True), name='static')
