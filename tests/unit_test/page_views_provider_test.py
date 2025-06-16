@@ -49,5 +49,11 @@ class TestPageViewsProvider:
         assert result == {
             'totalPeriods': 2,
             'totalValue': 15,
-            'periods': []
+            'periods': [{
+                'period': '2023-10-02',
+                'value': 10
+            }, {
+                'period': '2023-10-01',
+                'value': 5
+            }]
         }
