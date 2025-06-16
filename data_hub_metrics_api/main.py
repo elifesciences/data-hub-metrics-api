@@ -33,9 +33,9 @@ def get_redis_client() -> Redis:
     return redis_client
 
 
-def get_citations_provider_list() -> Sequence[CitationsProvider]:
+def get_citations_provider_list(redis_client: Redis) -> Sequence[CitationsProvider]:
     return [
-        CrossrefCitationsProvider(name="Crossref", redis_client=get_redis_client()),
+        CrossrefCitationsProvider(name="Crossref", redis_client=redis_client),
         DummyCitationsProvider(name="PubMed Central"),
         DummyCitationsProvider(name="Scopus")
     ]
@@ -44,11 +44,11 @@ def get_citations_provider_list() -> Sequence[CitationsProvider]:
 def create_app():
     app = FastAPI()
 
-    citations_provider_list = get_citations_provider_list()
+    redis_client = get_redis_client()
 
     app.include_router(create_api_router(
-        citations_provider_list=citations_provider_list,
-        page_views_provider=PageViewsProvider(get_redis_client())
+        citations_provider_list=get_citations_provider_list(redis_client),
+        page_views_provider=PageViewsProvider(redis_client)
     ))
 
     app.mount('/', StaticFiles(directory='static', html=True), name='static')
