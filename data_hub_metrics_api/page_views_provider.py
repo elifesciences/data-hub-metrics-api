@@ -43,6 +43,6 @@ class PageViewsProvider:
                     'period': date_str,
                     'value': int(value)
                 }
-                for date_str, value in sorted_page_views_by_date
+                for date_str, value in sorted_page_views_by_date[:per_page]
             ]
         }

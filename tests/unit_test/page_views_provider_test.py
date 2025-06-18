@@ -57,3 +57,33 @@ class TestPageViewsProvider:
                 'value': 5
             }]
         }
+
+    def test_should_not_return_more_than_per_page_items(
+        self,
+        page_views_provider: PageViewsProvider,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.hgetall.return_value = {
+            '2023-10-01': '5',
+            '2023-10-02': '10',
+            '2023-10-03': '15'
+        }
+
+        result = page_views_provider.get_page_views_for_article_id_by_time_period(
+            article_id='12345',
+            by='day',
+            per_page=2,
+            page=1
+        )
+
+        assert result == {
+            'totalPeriods': 3,
+            'totalValue': 30,
+            'periods': [{
+                'period': '2023-10-03',
+                'value': 15
+            }, {
+                'period': '2023-10-02',
+                'value': 10
+            }]
+        }
