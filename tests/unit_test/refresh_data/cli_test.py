@@ -18,11 +18,24 @@ def _get_citations_provider_list_mock() -> Iterator[MagicMock]:
         yield mock
 
 
+@pytest.fixture(name="page_views_provider_class_mock")
+def _page_views_provider_class_mock() -> Iterator[MagicMock]:
+    with patch.object(cli_module, "PageViewsProvider") as mock:
+        yield mock
+
+
+@pytest.fixture(name="page_views_provider_mock")
+def _page_views_provider_mock(
+    page_views_provider_class_mock: MagicMock
+) -> MagicMock:
+    return page_views_provider_class_mock.return_value
+
+
 class TestMain:
     def test_should_not_fail(self):
         main()
 
-    def test_should_call_refresh_data(
+    def test_should_call_refresh_data_on_citations_provider(
         self,
         get_citations_provider_list_mock: MagicMock,
     ):
@@ -30,3 +43,10 @@ class TestMain:
         get_citations_provider_list_mock.return_value = [provider]
         main()
         provider.refresh_data.assert_called_once()
+
+    def test_should_call_refresh_data_on_page_views_provider(
+        self,
+        page_views_provider_mock: MagicMock,
+    ):
+        main()
+        page_views_provider_mock.refresh_data.assert_called_once()
