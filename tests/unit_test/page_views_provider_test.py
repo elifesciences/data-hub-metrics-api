@@ -1,7 +1,13 @@
-from unittest.mock import MagicMock
+from datetime import date
+from typing import Iterable, Iterator
+from unittest.mock import MagicMock, patch
 import pytest
 
-from data_hub_metrics_api.page_views_provider import PageViewsProvider
+from data_hub_metrics_api.page_views_provider import (
+    PageViewsProvider,
+    BigQueryResultRow,
+)
+import data_hub_metrics_api.page_views_provider as page_views_provider_module
 
 
 @pytest.fixture(name='redis_client_mock')
@@ -10,8 +16,17 @@ def _redis_client_mock() -> MagicMock:
 
 
 @pytest.fixture(name='page_views_provider')
-def _page_views_provider(redis_client_mock) -> PageViewsProvider:
+def _page_views_provider(redis_client_mock: MagicMock) -> PageViewsProvider:
     return PageViewsProvider(redis_client_mock)
+
+
+@pytest.fixture(name='iter_dict_from_bq_query_mock', autouse=True)
+def _iter_dict_from_bq_query_mock() -> Iterator[MagicMock]:
+    with patch.object(
+        page_views_provider_module,
+        'iter_dict_from_bq_query'
+    ) as mock:
+        yield mock
 
 
 class TestPageViewsProvider:
@@ -138,3 +153,22 @@ class TestPageViewsProvider:
             'totalValue': 30,
             'periods': []
         }
+
+    def test_should_put_data_in_redis(
+        self,
+        iter_dict_from_bq_query_mock: MagicMock,
+        page_views_provider: PageViewsProvider,
+        redis_client_mock: MagicMock
+    ):
+        bq_result: Iterable[BigQueryResultRow] = [{
+            'article_id': '12345',
+            'event_date': date.fromisoformat('2023-10-01'),
+            'page_view_count': 5
+        }]
+        iter_dict_from_bq_query_mock.return_value = bq_result
+        page_views_provider.refresh_data()
+        redis_client_mock.hset.assert_called_once_with(
+            'article:12345:page_views:by_date',
+            '2023-10-01',
+            5
+        )

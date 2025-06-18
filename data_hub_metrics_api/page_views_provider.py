@@ -1,20 +1,36 @@
 # pylint: disable=duplicate-code
+from datetime import date
 import logging
-from typing import Literal
+from pathlib import Path
+from typing import Iterable, Literal, TypedDict, cast
 
 from redis import Redis
 
 from data_hub_metrics_api.api_router_typing import MetricTimePeriodResponseTypedDict
 
+from data_hub_metrics_api.sql import get_sql_path
+from data_hub_metrics_api.utils.bigquery import iter_dict_from_bq_query
+
 LOGGER = logging.getLogger(__name__)
+
+
+class BigQueryResultRow(TypedDict):
+    article_id: str
+    event_date: date
+    page_view_count: int
 
 
 class PageViewsProvider:
     def __init__(
         self,
-        redis_client: Redis
+        redis_client: Redis,
+        gcp_project_name: str = 'elife-data-pipeline'
     ):
         self.redis_client = redis_client
+        self.gcp_project_name = gcp_project_name
+        self.page_views_query = (
+            Path(get_sql_path('page_views_query.sql')).read_text(encoding='utf-8')
+        )
 
     def get_page_views_for_article_id_by_time_period(
         self,
@@ -50,3 +66,21 @@ class PageViewsProvider:
                 ]
             ]
         }
+
+    def refresh_data(
+        self
+    ) -> None:
+        LOGGER.info('Refreshing citation data from BigQuery...')
+        bq_result = cast(
+            Iterable[BigQueryResultRow],
+            iter_dict_from_bq_query(
+                self.gcp_project_name,
+                self.page_views_query
+            )
+        )
+        for row in bq_result:
+            self.redis_client.hset(
+                f'article:{row['article_id']}:page_views:by_date',
+                row['event_date'].isoformat(),
+                row['page_view_count']  # type: ignore[arg-type]
+            )
