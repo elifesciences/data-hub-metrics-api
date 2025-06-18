@@ -87,3 +87,54 @@ class TestPageViewsProvider:
                 'value': 10
             }]
         }
+
+    def test_should_not_return_from_selected_page_number(
+        self,
+        page_views_provider: PageViewsProvider,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.hgetall.return_value = {
+            '2023-10-01': '5',
+            '2023-10-02': '10',
+            '2023-10-03': '15'
+        }
+
+        result = page_views_provider.get_page_views_for_article_id_by_time_period(
+            article_id='12345',
+            by='day',
+            per_page=2,
+            page=2
+        )
+
+        assert result == {
+            'totalPeriods': 3,
+            'totalValue': 30,
+            'periods': [{
+                'period': '2023-10-01',
+                'value': 5
+            }]
+        }
+
+    def test_should_return_empty_periods_if_selected_page_does_not_exist(
+        self,
+        page_views_provider: PageViewsProvider,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.hgetall.return_value = {
+            '2023-10-01': '5',
+            '2023-10-02': '10',
+            '2023-10-03': '15'
+        }
+
+        result = page_views_provider.get_page_views_for_article_id_by_time_period(
+            article_id='12345',
+            by='day',
+            per_page=2,
+            page=3
+        )
+
+        assert result == {
+            'totalPeriods': 3,
+            'totalValue': 30,
+            'periods': []
+        }

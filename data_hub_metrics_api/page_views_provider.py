@@ -35,6 +35,8 @@ class PageViewsProvider:
             key=lambda item: item[0],  # Sort by date string
             reverse=True
         )
+        page_start_index = (page - 1) * per_page
+        page_end_index = page_start_index + per_page
         return {
             'totalPeriods': len(page_views_by_date),
             'totalValue': sum(int(value) for value in page_views_by_date.values()),
@@ -43,6 +45,8 @@ class PageViewsProvider:
                     'period': date_str,
                     'value': int(value)
                 }
-                for date_str, value in sorted_page_views_by_date[:per_page]
+                for date_str, value in sorted_page_views_by_date[
+                    page_start_index:page_end_index
+                ]
             ]
         }
