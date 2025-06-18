@@ -70,7 +70,7 @@ class PageViewsProvider:
     def refresh_data(
         self
     ) -> None:
-        LOGGER.info('Refreshing citation data from BigQuery...')
+        LOGGER.info('Refreshing page views data from BigQuery...')
         bq_result = cast(
             Iterable[BigQueryResultRow],
             iter_dict_from_bq_query(
