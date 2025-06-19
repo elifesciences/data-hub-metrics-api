@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 from typing import Iterable, Literal, TypedDict, cast
 
+from tqdm import tqdm
 from redis import Redis
 
 from data_hub_metrics_api.api_router_typing import MetricTimePeriodResponseTypedDict
@@ -78,7 +79,7 @@ class PageViewsProvider:
                 self.page_views_query
             )
         )
-        for row in bq_result:
+        for row in tqdm(bq_result):
             self.redis_client.hset(
                 f'article:{row['article_id']}:page_views:by_date',
                 row['event_date'].isoformat(),
