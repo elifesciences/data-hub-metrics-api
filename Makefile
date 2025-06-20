@@ -62,7 +62,7 @@ dev-start:
 
 
 dev-refresh-citations:
-	$(PYTHON) -m data_hub_metrics_api.refresh_data.cli
+	$(PYTHON) -m data_hub_metrics_api.refresh_data.citations_cli
 
 
 dev-refresh-page-views:

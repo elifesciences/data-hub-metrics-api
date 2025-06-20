@@ -1,9 +1,9 @@
 from typing import Iterator
 from unittest.mock import MagicMock, patch
 import pytest
-from data_hub_metrics_api.refresh_data.cli import main
+from data_hub_metrics_api.refresh_data.citations_cli import main
 
-import data_hub_metrics_api.refresh_data.cli as cli_module
+import data_hub_metrics_api.refresh_data.citations_cli as cli_module
 
 
 @pytest.fixture(name="get_redis_client_mock", autouse=True)
