@@ -10,6 +10,7 @@ from data_hub_metrics_api.api_router_typing import (
     MetricTimePeriodResponseTypedDict
 )
 from data_hub_metrics_api.citations_provider import CitationsProvider
+from data_hub_metrics_api.page_views_provider import PageViewsProvider
 
 
 LOGGER = logging.getLogger(__name__)
@@ -46,7 +47,11 @@ class MetricTimePeriodJsonResponse(JSONResponse):
     media_type = 'application/vnd.elife.metric-time-period+json;version=1'
 
 
-def create_api_router(citations_provider_list: Sequence[CitationsProvider]) -> APIRouter:
+def create_api_router(
+    citations_provider_list: Sequence[CitationsProvider],
+    page_views_provider: PageViewsProvider
+) -> APIRouter:
+    assert page_views_provider is not None
     router = APIRouter()
 
     @router.get(
@@ -106,15 +111,12 @@ def create_api_router(citations_provider_list: Sequence[CitationsProvider]) -> A
         per_page: PerPageQueryType = 20,
         page: PageQueryType = 1
     ) -> MetricTimePeriodResponseTypedDict:
-        LOGGER.info(
-            'page-views: article_id=%r, by=%r, per_page=%r, page=%r',
-            article_id, by, per_page, page
+        return page_views_provider.get_page_views_for_article_id_by_time_period(
+            article_id=article_id,
+            by=by,
+            per_page=per_page,
+            page=page
         )
-        return {
-            'totalPeriods': 0,
-            'totalValue': 0,
-            'periods': []
-        }
 
     @router.get('/metrics/article/summary')
     def provide_summary_for_all_articles(

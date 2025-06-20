@@ -34,6 +34,7 @@ def iter_dict_from_bq_query(
         query=query,
         query_parameters=query_parameters
     )
+    LOGGER.info('Total rows from BigQuery %d', bq_result.total_rows)
     for row in bq_result:
         LOGGER.debug('row: %r', row)
         yield dict(row.items())
