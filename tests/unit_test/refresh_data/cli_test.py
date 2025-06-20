@@ -18,7 +18,7 @@ def _get_citations_provider_list_mock() -> Iterator[MagicMock]:
         yield mock
 
 
-@pytest.fixture(name="page_views_provider_class_mock")
+@pytest.fixture(name="page_views_provider_class_mock", autouse=True)
 def _page_views_provider_class_mock() -> Iterator[MagicMock]:
     with patch.object(cli_module, "PageViewsProvider") as mock:
         yield mock
