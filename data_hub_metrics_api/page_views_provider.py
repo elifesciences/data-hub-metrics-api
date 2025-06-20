@@ -21,6 +21,13 @@ class BigQueryResultRow(TypedDict):
     page_view_count: int
 
 
+def get_query_with_replaced_number_of_days(
+    query: str,
+    number_of_days: int
+) -> str:
+    return query.replace(r'{number_of_days}', str(number_of_days))
+
+
 class PageViewsProvider:
     def __init__(
         self,
@@ -69,12 +76,16 @@ class PageViewsProvider:
         }
 
     def refresh_data(
-        self
+        self,
+        number_of_days: int
     ) -> None:
         LOGGER.info('Refreshing page views data from BigQuery...')
         bq_result = get_bq_result_from_bq_query(
             project_name=self.gcp_project_name,
-            query=self.page_views_query
+            query=get_query_with_replaced_number_of_days(
+                self.page_views_query,
+                number_of_days=number_of_days
+            )
         )
         total_rows = bq_result.total_rows
         LOGGER.info('Total rows from BigQuery: %d', total_rows)

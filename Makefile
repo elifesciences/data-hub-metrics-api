@@ -10,6 +10,7 @@ PYTHON = $(VENV)/bin/python
 
 PYTEST_WATCH_MODULES = tests/unit_test
 
+NUMBER_OF_DAYS = 1
 
 venv-clean:
 	@if [ -d "$(VENV)" ]; then \
@@ -66,7 +67,8 @@ dev-refresh-citations:
 
 
 dev-refresh-page-views:
-	$(PYTHON) -m data_hub_metrics_api.refresh_data.page_views_cli
+	$(PYTHON) -m data_hub_metrics_api.refresh_data.page_views_cli \
+		--number-of-days=$(NUMBER_OF_DAYS)
 
 
 build:

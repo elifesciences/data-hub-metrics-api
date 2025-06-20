@@ -4,7 +4,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from data_hub_metrics_api.page_views_provider import (
-    PageViewsProvider
+    PageViewsProvider,
+    get_query_with_replaced_number_of_days
 )
 import data_hub_metrics_api.page_views_provider as page_views_provider_module
 
@@ -26,6 +27,14 @@ def _get_bq_result_from_bq_query_mock() -> Iterator[MagicMock]:
         'get_bq_result_from_bq_query'
     ) as mock:
         yield mock
+
+
+class TestGetQueryWithReplacedNumberOfDays:
+    def test_should_replace_number_of_days(self):
+        assert get_query_with_replaced_number_of_days(
+            'SELECT {number_of_days}',
+            number_of_days=123
+        ) == 'SELECT 123'
 
 
 class TestPageViewsProvider:
@@ -153,6 +162,23 @@ class TestPageViewsProvider:
             'periods': []
         }
 
+    def test_should_replace_number_of_days_in_query(
+        self,
+        get_bq_result_from_bq_query_mock: MagicMock,
+        page_views_provider: PageViewsProvider,
+    ):
+        mock_bq_result = MagicMock()
+        mock_bq_result.total_rows = 0
+        get_bq_result_from_bq_query_mock.return_value = mock_bq_result
+        page_views_provider.refresh_data(number_of_days=123)
+        get_bq_result_from_bq_query_mock.assert_called_with(
+            project_name=page_views_provider.gcp_project_name,
+            query=get_query_with_replaced_number_of_days(
+                page_views_provider.page_views_query,
+                number_of_days=123
+            )
+        )
+
     def test_should_put_data_in_redis(
         self,
         get_bq_result_from_bq_query_mock: MagicMock,
@@ -167,7 +193,7 @@ class TestPageViewsProvider:
             'page_view_count': 5
         }])
         get_bq_result_from_bq_query_mock.return_value = mock_bq_result
-        page_views_provider.refresh_data()
+        page_views_provider.refresh_data(number_of_days=3)
         redis_client_mock.hset.assert_called_once_with(
             'article:12345:page_views:by_date',
             '2023-10-01',

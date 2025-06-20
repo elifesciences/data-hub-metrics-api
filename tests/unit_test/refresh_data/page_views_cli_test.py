@@ -30,5 +30,7 @@ class TestMain:
         self,
         page_views_provider_mock: MagicMock,
     ):
-        main()
-        page_views_provider_mock.refresh_data.assert_called_once()
+        main(['--number-of-days=123'])
+        page_views_provider_mock.refresh_data.assert_called_with(
+            number_of_days=123
+        )
