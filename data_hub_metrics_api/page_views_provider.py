@@ -85,3 +85,4 @@ class PageViewsProvider:
                 row['event_date'].isoformat(),
                 row['page_view_count']  # type: ignore[arg-type]
             )
+        LOGGER.info('Done: Refreshing page views data from BigQuery')

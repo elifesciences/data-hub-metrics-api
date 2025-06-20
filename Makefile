@@ -61,8 +61,12 @@ dev-start:
 		--log-config=config/logging.yaml
 
 
-dev-refresh-data:
+dev-refresh-citations:
 	$(PYTHON) -m data_hub_metrics_api.refresh_data.cli
+
+
+dev-refresh-page-views:
+	$(PYTHON) -m data_hub_metrics_api.refresh_data.page_views_cli
 
 
 build:
