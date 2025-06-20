@@ -2,7 +2,7 @@
 from datetime import date
 import logging
 from pathlib import Path
-from typing import Iterable, Literal, TypedDict, cast
+from typing import Literal, TypedDict
 
 from tqdm import tqdm
 from redis import Redis
@@ -10,7 +10,7 @@ from redis import Redis
 from data_hub_metrics_api.api_router_typing import MetricTimePeriodResponseTypedDict
 
 from data_hub_metrics_api.sql import get_sql_path
-from data_hub_metrics_api.utils.bigquery import iter_dict_from_bq_query
+from data_hub_metrics_api.utils.bigquery import get_bq_result_from_bq_query
 
 LOGGER = logging.getLogger(__name__)
 
@@ -72,14 +72,14 @@ class PageViewsProvider:
         self
     ) -> None:
         LOGGER.info('Refreshing page views data from BigQuery...')
-        bq_result = cast(
-            Iterable[BigQueryResultRow],
-            iter_dict_from_bq_query(
-                self.gcp_project_name,
-                self.page_views_query
-            )
+        bq_result = get_bq_result_from_bq_query(
+            project_name=self.gcp_project_name,
+            query=self.page_views_query
         )
-        for row in tqdm(bq_result):
+        total_rows = bq_result.total_rows
+        LOGGER.info('Total rows from BigQuery: %d', total_rows)
+
+        for row in tqdm(bq_result, total=total_rows, desc="Loading Redis"):
             self.redis_client.hset(
                 f'article:{row['article_id']}:page_views:by_date',
                 row['event_date'].isoformat(),
