@@ -15,6 +15,22 @@ from data_hub_metrics_api.utils.bigquery import get_bq_result_from_bq_query
 LOGGER = logging.getLogger(__name__)
 
 
+original_del = tqdm.__del__
+
+
+# A safe wrapper around tqdm's __del__ method that catches and ignores
+# AttributeError exceptions caused by known tqdm issues during interpreter shutdown.
+# This prevents ugly traceback errors that do not affect program correctness.
+def safe_del(self):
+    try:
+        original_del(self)
+    except AttributeError as e:
+        print(f"[WARNING] Ignored tqdm __del__ error: {e}")
+
+
+tqdm.__del__ = safe_del
+
+
 class BigQueryResultRow(TypedDict):
     article_id: str
     event_date: date
