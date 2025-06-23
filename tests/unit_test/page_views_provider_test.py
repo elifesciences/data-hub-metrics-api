@@ -10,7 +10,7 @@ from data_hub_metrics_api.page_views_provider import (
 import data_hub_metrics_api.page_views_provider as page_views_provider_module
 
 
-@pytest.fixture(name='redis_client_mock')
+@pytest.fixture(name='redis_client_mock', autouse=True)
 def _redis_client_mock() -> MagicMock:
     return MagicMock(name='redis_client')
 
@@ -38,6 +38,12 @@ class TestGetQueryWithReplacedNumberOfDays:
 
 
 class TestPageViewsProvider:
+    def test_should_return_zero_for_total_page_views_if_no_page_views(
+        self,
+        page_views_provider: PageViewsProvider
+    ):
+        assert page_views_provider.get_page_view_total_for_article_id(article_id='12345') == 0
+
     def test_should_return_zero_if_there_are_no_page_views(
         self,
         page_views_provider: PageViewsProvider

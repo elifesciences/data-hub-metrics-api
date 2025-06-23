@@ -43,6 +43,13 @@ class PageViewsProvider:
             Path(get_sql_path('page_view_totals_query.sql')).read_text(encoding='utf-8')
         )
 
+    def get_page_view_total_for_article_id(
+        self,
+        article_id: str
+    ) -> int:
+        LOGGER.info('page-views: article_id=%r', article_id)
+        return 0
+
     def get_page_views_for_article_id_by_time_period(
         self,
         article_id: str,
