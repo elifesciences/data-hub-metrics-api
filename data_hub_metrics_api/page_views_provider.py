@@ -2,7 +2,7 @@
 from datetime import date
 import logging
 from pathlib import Path
-from typing import Literal, TypedDict
+from typing import Literal, Optional, TypedDict
 
 from tqdm import tqdm
 from redis import Redis
@@ -47,8 +47,11 @@ class PageViewsProvider:
         self,
         article_id: str
     ) -> int:
-        LOGGER.info('page-views: article_id=%r', article_id)
-        return 0
+        LOGGER.debug('page-views: article_id=%r', article_id)
+        redis_value: Optional[str] = self.redis_client.get(  # type: ignore[assignment]
+            f'article:{article_id}:page_views'
+        )
+        return int(redis_value or 0)
 
     def get_page_views_for_article_id_by_time_period(
         self,

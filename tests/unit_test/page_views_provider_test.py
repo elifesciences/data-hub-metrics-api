@@ -40,9 +40,20 @@ class TestGetQueryWithReplacedNumberOfDays:
 class TestPageViewsProvider:
     def test_should_return_zero_for_total_page_views_if_no_page_views(
         self,
-        page_views_provider: PageViewsProvider
+        page_views_provider: PageViewsProvider,
+        redis_client_mock: MagicMock
     ):
+        redis_client_mock.get.return_value = None
         assert page_views_provider.get_page_view_total_for_article_id(article_id='12345') == 0
+
+    def test_should_return_total_page_views_from_redis(
+        self,
+        page_views_provider: PageViewsProvider,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.get.return_value = '123'
+        assert page_views_provider.get_page_view_total_for_article_id(article_id='12345') == 123
+        redis_client_mock.get.assert_called_with('article:12345:page_views')
 
     def test_should_return_zero_if_there_are_no_page_views(
         self,
