@@ -1,6 +1,6 @@
 from datetime import date
 from typing import Iterator
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 import pytest
 
 from data_hub_metrics_api.page_views_provider import (
@@ -10,7 +10,7 @@ from data_hub_metrics_api.page_views_provider import (
 import data_hub_metrics_api.page_views_provider as page_views_provider_module
 
 
-@pytest.fixture(name='redis_client_mock')
+@pytest.fixture(name='redis_client_mock', autouse=True)
 def _redis_client_mock() -> MagicMock:
     return MagicMock(name='redis_client')
 
@@ -38,6 +38,37 @@ class TestGetQueryWithReplacedNumberOfDays:
 
 
 class TestPageViewsProvider:
+    def test_should_return_zero_for_total_page_views_if_no_page_views(
+        self,
+        page_views_provider: PageViewsProvider,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.get.return_value = None
+        assert page_views_provider.get_page_view_total_for_article_id(article_id='12345') == 0
+
+    def test_should_return_total_page_views_from_redis(
+        self,
+        page_views_provider: PageViewsProvider,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.get.return_value = '123'
+        assert page_views_provider.get_page_view_total_for_article_id(article_id='12345') == 123
+        redis_client_mock.get.assert_called_with('article:12345:page_views')
+
+    def test_should_return_total_page_views_as_total_value(
+        self,
+        page_views_provider: PageViewsProvider,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.get.return_value = '123'
+        result = page_views_provider.get_page_views_for_article_id_by_time_period(
+            article_id='12345',
+            by='day',
+            per_page=10,
+            page=1
+        )
+        assert result['totalValue'] == 123
+
     def test_should_return_zero_if_there_are_no_page_views(
         self,
         page_views_provider: PageViewsProvider
@@ -49,7 +80,7 @@ class TestPageViewsProvider:
             page=1
         ) == {
             'totalPeriods': 0,
-            'totalValue': 0,
+            'totalValue': ANY,
             'periods': []
         }
 
@@ -71,7 +102,7 @@ class TestPageViewsProvider:
         redis_client_mock.hgetall.assert_called_once_with('article:12345:page_views:by_date')
         assert result == {
             'totalPeriods': 2,
-            'totalValue': 15,
+            'totalValue': ANY,
             'periods': [{
                 'period': '2023-10-02',
                 'value': 10
@@ -101,7 +132,7 @@ class TestPageViewsProvider:
 
         assert result == {
             'totalPeriods': 3,
-            'totalValue': 30,
+            'totalValue': ANY,
             'periods': [{
                 'period': '2023-10-03',
                 'value': 15
@@ -131,7 +162,7 @@ class TestPageViewsProvider:
 
         assert result == {
             'totalPeriods': 3,
-            'totalValue': 30,
+            'totalValue': ANY,
             'periods': [{
                 'period': '2023-10-01',
                 'value': 5
@@ -158,7 +189,7 @@ class TestPageViewsProvider:
 
         assert result == {
             'totalPeriods': 3,
-            'totalValue': 30,
+            'totalValue': ANY,
             'periods': []
         }
 
@@ -197,5 +228,28 @@ class TestPageViewsProvider:
         redis_client_mock.hset.assert_called_once_with(
             'article:12345:page_views:by_date',
             '2023-10-01',
+            5
+        )
+
+    def test_should_put_page_view_totals_in_redis(
+        self,
+        get_bq_result_from_bq_query_mock: MagicMock,
+        page_views_provider: PageViewsProvider,
+        redis_client_mock: MagicMock
+    ):
+        mock_bq_result = MagicMock()
+        mock_bq_result.total_rows = 1
+        mock_bq_result.__iter__.return_value = iter([{
+            'article_id': '12345',
+            'page_view_count': 5
+        }])
+        get_bq_result_from_bq_query_mock.return_value = mock_bq_result
+        page_views_provider.refresh_page_view_totals()
+        get_bq_result_from_bq_query_mock.assert_called_with(
+            project_name=page_views_provider.gcp_project_name,
+            query=page_views_provider.page_view_totals_query
+        )
+        redis_client_mock.set.assert_called_once_with(
+            'article:12345:page_views',
             5
         )

@@ -2,7 +2,7 @@
 from datetime import date
 import logging
 from pathlib import Path
-from typing import Literal, TypedDict
+from typing import Literal, Optional, TypedDict
 
 from tqdm import tqdm
 from redis import Redis
@@ -39,6 +39,19 @@ class PageViewsProvider:
         self.page_views_query = (
             Path(get_sql_path('page_views_query.sql')).read_text(encoding='utf-8')
         )
+        self.page_view_totals_query = (
+            Path(get_sql_path('page_view_totals_query.sql')).read_text(encoding='utf-8')
+        )
+
+    def get_page_view_total_for_article_id(
+        self,
+        article_id: str
+    ) -> int:
+        LOGGER.debug('page-views: article_id=%r', article_id)
+        redis_value: Optional[str] = self.redis_client.get(  # type: ignore[assignment]
+            f'article:{article_id}:page_views'
+        )
+        return int(redis_value or 0)
 
     def get_page_views_for_article_id_by_time_period(
         self,
@@ -61,9 +74,10 @@ class PageViewsProvider:
         )
         page_start_index = (page - 1) * per_page
         page_end_index = page_start_index + per_page
+        total_value = self.get_page_view_total_for_article_id(article_id)
         return {
             'totalPeriods': len(page_views_by_date),
-            'totalValue': sum(int(value) for value in page_views_by_date.values()),
+            'totalValue': total_value,
             'periods': [
                 {
                     'period': date_str,
@@ -97,3 +111,19 @@ class PageViewsProvider:
                 row['page_view_count']  # type: ignore[arg-type]
             )
         LOGGER.info('Done: Refreshing page views data from BigQuery')
+
+    def refresh_page_view_totals(self) -> None:
+        LOGGER.info('Refreshing page view totals data from BigQuery...')
+        bq_result = get_bq_result_from_bq_query(
+            project_name=self.gcp_project_name,
+            query=self.page_view_totals_query
+        )
+        total_rows = bq_result.total_rows
+        LOGGER.info('Total rows from BigQuery: %d', total_rows)
+
+        for row in tqdm(bq_result, total=total_rows, desc="Loading Redis"):
+            self.redis_client.set(
+                f'article:{row['article_id']}:page_views',
+                row['page_view_count']  # type: ignore[arg-type]
+            )
+        LOGGER.info('Done: Refreshing page view totals data from BigQuery')
