@@ -28,6 +28,13 @@ def get_query_with_replaced_number_of_days(
     return query.replace(r'{number_of_days}', str(number_of_days))
 
 
+def get_query_with_replaced_number_of_months(
+    query: str,
+    number_of_months: int
+) -> str:
+    return query.replace(r'{number_of_months}', str(number_of_months))
+
+
 class PageViewsProvider:
     def __init__(
         self,
@@ -38,6 +45,9 @@ class PageViewsProvider:
         self.gcp_project_name = gcp_project_name
         self.page_views_query = (
             Path(get_sql_path('page_views_query.sql')).read_text(encoding='utf-8')
+        )
+        self.page_views_monthly_query = (
+            Path(get_sql_path('page_views_monthly_query.sql')).read_text(encoding='utf-8')
         )
         self.page_view_totals_query = (
             Path(get_sql_path('page_view_totals_query.sql')).read_text(encoding='utf-8')
@@ -111,6 +121,29 @@ class PageViewsProvider:
                 row['page_view_count']  # type: ignore[arg-type]
             )
         LOGGER.info('Done: Refreshing page views data from BigQuery')
+
+    def refresh_page_views_monthly(
+        self,
+        number_of_months: int
+    ) -> None:
+        LOGGER.info('Refreshing monthly page views data from BigQuery...')
+        bq_result = get_bq_result_from_bq_query(
+            project_name=self.gcp_project_name,
+            query=get_query_with_replaced_number_of_months(
+                self.page_views_monthly_query,
+                number_of_months=number_of_months
+            )
+        )
+        total_rows = bq_result.total_rows
+        LOGGER.info('Total rows from BigQuery: %d', total_rows)
+
+        for row in tqdm(bq_result, total=total_rows, desc="Loading Redis"):
+            self.redis_client.hset(
+                f'article:{row['article_id']}:page_views:by_month',
+                row['year_month'],
+                row['page_view_count']  # type: ignore[arg-type]
+            )
+        LOGGER.info('Done: Refreshing monthly page views data from BigQuery')
 
     def refresh_page_view_totals(self) -> None:
         LOGGER.info('Refreshing page view totals data from BigQuery...')
