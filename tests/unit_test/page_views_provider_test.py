@@ -78,6 +78,29 @@ class TestPageViewsProvider:
         )
         assert result['totalValue'] == 123
 
+    def test_should_put_page_view_totals_in_redis(
+        self,
+        get_bq_result_from_bq_query_mock: MagicMock,
+        page_views_provider: PageViewsProvider,
+        redis_client_mock: MagicMock
+    ):
+        mock_bq_result = MagicMock()
+        mock_bq_result.total_rows = 1
+        mock_bq_result.__iter__.return_value = iter([{
+            'article_id': '12345',
+            'page_view_count': 5
+        }])
+        get_bq_result_from_bq_query_mock.return_value = mock_bq_result
+        page_views_provider.refresh_page_view_totals()
+        get_bq_result_from_bq_query_mock.assert_called_with(
+            project_name=page_views_provider.gcp_project_name,
+            query=page_views_provider.page_view_totals_query
+        )
+        redis_client_mock.set.assert_called_once_with(
+            'article:12345:page_views',
+            5
+        )
+
     def test_should_return_zero_if_there_are_no_page_views(
         self,
         page_views_provider: PageViewsProvider
@@ -275,28 +298,5 @@ class TestPageViewsProvider:
         redis_client_mock.hset.assert_called_once_with(
             'article:12345:page_views:by_month',
             '2023-10',
-            5
-        )
-
-    def test_should_put_page_view_totals_in_redis(
-        self,
-        get_bq_result_from_bq_query_mock: MagicMock,
-        page_views_provider: PageViewsProvider,
-        redis_client_mock: MagicMock
-    ):
-        mock_bq_result = MagicMock()
-        mock_bq_result.total_rows = 1
-        mock_bq_result.__iter__.return_value = iter([{
-            'article_id': '12345',
-            'page_view_count': 5
-        }])
-        get_bq_result_from_bq_query_mock.return_value = mock_bq_result
-        page_views_provider.refresh_page_view_totals()
-        get_bq_result_from_bq_query_mock.assert_called_with(
-            project_name=page_views_provider.gcp_project_name,
-            query=page_views_provider.page_view_totals_query
-        )
-        redis_client_mock.set.assert_called_once_with(
-            'article:12345:page_views',
             5
         )
