@@ -1,6 +1,6 @@
 from datetime import date
 from typing import Iterator
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 import pytest
 
 from data_hub_metrics_api.page_views_provider import (
@@ -55,6 +55,20 @@ class TestPageViewsProvider:
         assert page_views_provider.get_page_view_total_for_article_id(article_id='12345') == 123
         redis_client_mock.get.assert_called_with('article:12345:page_views')
 
+    def test_should_return_total_page_views_as_total_value(
+        self,
+        page_views_provider: PageViewsProvider,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.get.return_value = '123'
+        result = page_views_provider.get_page_views_for_article_id_by_time_period(
+            article_id='12345',
+            by='day',
+            per_page=10,
+            page=1
+        )
+        assert result['totalValue'] == 123
+
     def test_should_return_zero_if_there_are_no_page_views(
         self,
         page_views_provider: PageViewsProvider
@@ -66,7 +80,7 @@ class TestPageViewsProvider:
             page=1
         ) == {
             'totalPeriods': 0,
-            'totalValue': 0,
+            'totalValue': ANY,
             'periods': []
         }
 
@@ -88,7 +102,7 @@ class TestPageViewsProvider:
         redis_client_mock.hgetall.assert_called_once_with('article:12345:page_views:by_date')
         assert result == {
             'totalPeriods': 2,
-            'totalValue': 15,
+            'totalValue': ANY,
             'periods': [{
                 'period': '2023-10-02',
                 'value': 10
@@ -118,7 +132,7 @@ class TestPageViewsProvider:
 
         assert result == {
             'totalPeriods': 3,
-            'totalValue': 30,
+            'totalValue': ANY,
             'periods': [{
                 'period': '2023-10-03',
                 'value': 15
@@ -148,7 +162,7 @@ class TestPageViewsProvider:
 
         assert result == {
             'totalPeriods': 3,
-            'totalValue': 30,
+            'totalValue': ANY,
             'periods': [{
                 'period': '2023-10-01',
                 'value': 5
@@ -175,7 +189,7 @@ class TestPageViewsProvider:
 
         assert result == {
             'totalPeriods': 3,
-            'totalValue': 30,
+            'totalValue': ANY,
             'periods': []
         }
 

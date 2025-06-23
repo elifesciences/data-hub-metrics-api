@@ -74,9 +74,10 @@ class PageViewsProvider:
         )
         page_start_index = (page - 1) * per_page
         page_end_index = page_start_index + per_page
+        total_value = self.get_page_view_total_for_article_id(article_id)
         return {
             'totalPeriods': len(page_views_by_date),
-            'totalValue': sum(int(value) for value in page_views_by_date.values()),
+            'totalValue': total_value,
             'periods': [
                 {
                     'period': date_str,
