@@ -263,6 +263,34 @@ class TestPageViewsProvider:
             5
         )
 
+    def test_should_read_page_views_monthly_from_redis(
+        self,
+        page_views_provider: PageViewsProvider,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.hgetall.return_value = {
+            '2023-10': '5',
+            '2023-11': '10'
+        }
+        result = page_views_provider.get_page_views_for_article_id_by_time_period(
+            article_id='12345',
+            by='month',
+            per_page=10,
+            page=1
+        )
+        redis_client_mock.hgetall.assert_called_once_with('article:12345:page_views:by_month')
+        assert result == {
+            'totalPeriods': 2,
+            'totalValue': ANY,
+            'periods': [{
+                'period': '2023-11',
+                'value': 10
+            }, {
+                'period': '2023-10',
+                'value': 5
+            }]
+        }
+
     def test_should_replace_number_of_months_in_query(
         self,
         get_bq_result_from_bq_query_mock: MagicMock,

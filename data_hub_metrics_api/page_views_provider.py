@@ -74,26 +74,32 @@ class PageViewsProvider:
             'page-views: article_id=%r, by=%r, per_page=%r, page=%r',
             article_id, by, per_page, page
         )
-        page_views_by_date: dict = self.redis_client.hgetall(  # type: ignore[assignment]
-            f'article:{article_id}:page_views:by_date'
-        )
-        sorted_page_views_by_date = sorted(
-            page_views_by_date.items(),
-            key=lambda item: item[0],  # Sort by date string
+        page_views_by_period: dict
+        if by == 'month':
+            page_views_by_period = self.redis_client.hgetall(  # type: ignore[assignment]
+                f'article:{article_id}:page_views:by_month'
+            )
+        else:
+            page_views_by_period = self.redis_client.hgetall(  # type: ignore[assignment]
+                f'article:{article_id}:page_views:by_date'
+            )
+        sorted_page_views_by_period = sorted(
+            page_views_by_period.items(),
+            key=lambda item: item[0],  # Sort by date string or year month
             reverse=True
         )
         page_start_index = (page - 1) * per_page
         page_end_index = page_start_index + per_page
         total_value = self.get_page_view_total_for_article_id(article_id)
         return {
-            'totalPeriods': len(page_views_by_date),
+            'totalPeriods': len(page_views_by_period),
             'totalValue': total_value,
             'periods': [
                 {
-                    'period': date_str,
+                    'period': period_str,
                     'value': int(value)
                 }
-                for date_str, value in sorted_page_views_by_date[
+                for period_str, value in sorted_page_views_by_period[
                     page_start_index:page_end_index
                 ]
             ]
