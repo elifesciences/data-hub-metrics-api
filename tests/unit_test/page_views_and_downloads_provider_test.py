@@ -3,12 +3,12 @@ from typing import Iterator
 from unittest.mock import ANY, MagicMock, patch
 import pytest
 
-from data_hub_metrics_api.page_views_provider import (
+from data_hub_metrics_api.page_views_and_downloads_provider import (
     PageViewsAndDownloadsProvider,
     get_query_with_replaced_number_of_days,
     get_query_with_replaced_number_of_months
 )
-import data_hub_metrics_api.page_views_provider as page_views_provider_module
+import data_hub_metrics_api.page_views_and_downloads_provider as views_downloads_provider_module
 
 
 @pytest.fixture(name='redis_client_mock', autouse=True)
@@ -16,15 +16,17 @@ def _redis_client_mock() -> MagicMock:
     return MagicMock(name='redis_client')
 
 
-@pytest.fixture(name='page_views_provider')
-def _page_views_provider(redis_client_mock: MagicMock) -> PageViewsAndDownloadsProvider:
+@pytest.fixture(name='page_views_and_downloads_provider')
+def _page_views_and_downloads_provider(
+    redis_client_mock: MagicMock
+) -> PageViewsAndDownloadsProvider:
     return PageViewsAndDownloadsProvider(redis_client_mock)
 
 
 @pytest.fixture(name='get_bq_result_from_bq_query_mock', autouse=True)
 def _get_bq_result_from_bq_query_mock() -> Iterator[MagicMock]:
     with patch.object(
-        page_views_provider_module,
+        views_downloads_provider_module,
         'get_bq_result_from_bq_query'
     ) as mock:
         yield mock
@@ -49,28 +51,32 @@ class TestGetQueryWithReplacedNumberOfMonths:
 class TestPageViewsAndDownloadsProvider:
     def test_should_return_zero_for_total_page_views_if_no_page_views(
         self,
-        page_views_provider: PageViewsAndDownloadsProvider,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         redis_client_mock.get.return_value = None
-        assert page_views_provider.get_page_view_total_for_article_id(article_id='12345') == 0
+        assert page_views_and_downloads_provider.get_page_view_total_for_article_id(
+            article_id='12345'
+        ) == 0
 
     def test_should_return_total_page_views_from_redis(
         self,
-        page_views_provider: PageViewsAndDownloadsProvider,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         redis_client_mock.get.return_value = '123'
-        assert page_views_provider.get_page_view_total_for_article_id(article_id='12345') == 123
+        assert page_views_and_downloads_provider.get_page_view_total_for_article_id(
+            article_id='12345'
+        ) == 123
         redis_client_mock.get.assert_called_with('article:12345:page_views')
 
     def test_should_return_total_page_views_as_total_value(
         self,
-        page_views_provider: PageViewsAndDownloadsProvider,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         redis_client_mock.get.return_value = '123'
-        result = page_views_provider.get_page_views_for_article_id_by_time_period(
+        result = page_views_and_downloads_provider.get_page_views_for_article_id_by_time_period(
             article_id='12345',
             by='day',
             per_page=10,
@@ -81,7 +87,7 @@ class TestPageViewsAndDownloadsProvider:
     def test_should_put_page_view_totals_in_redis(
         self,
         get_bq_result_from_bq_query_mock: MagicMock,
-        page_views_provider: PageViewsAndDownloadsProvider,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         mock_bq_result = MagicMock()
@@ -91,10 +97,10 @@ class TestPageViewsAndDownloadsProvider:
             'page_view_count': 5
         }])
         get_bq_result_from_bq_query_mock.return_value = mock_bq_result
-        page_views_provider.refresh_page_view_totals()
+        page_views_and_downloads_provider.refresh_page_view_totals()
         get_bq_result_from_bq_query_mock.assert_called_with(
-            project_name=page_views_provider.gcp_project_name,
-            query=page_views_provider.page_view_and_download_totals_query
+            project_name=page_views_and_downloads_provider.gcp_project_name,
+            query=page_views_and_downloads_provider.page_view_and_download_totals_query
         )
         redis_client_mock.set.assert_called_once_with(
             'article:12345:page_views',
@@ -103,9 +109,9 @@ class TestPageViewsAndDownloadsProvider:
 
     def test_should_return_zero_if_there_are_no_page_views(
         self,
-        page_views_provider: PageViewsAndDownloadsProvider
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider
     ):
-        assert page_views_provider.get_page_views_for_article_id_by_time_period(
+        assert page_views_and_downloads_provider.get_page_views_for_article_id_by_time_period(
             article_id='12345',
             by='day',
             per_page=10,
@@ -118,14 +124,14 @@ class TestPageViewsAndDownloadsProvider:
 
     def test_should_read_page_views_from_redis(
         self,
-        page_views_provider: PageViewsAndDownloadsProvider,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         redis_client_mock.hgetall.return_value = {
             '2023-10-01': '5',
             '2023-10-02': '10'
         }
-        result = page_views_provider.get_page_views_for_article_id_by_time_period(
+        result = page_views_and_downloads_provider.get_page_views_for_article_id_by_time_period(
             article_id='12345',
             by='day',
             per_page=10,
@@ -146,7 +152,7 @@ class TestPageViewsAndDownloadsProvider:
 
     def test_should_not_return_more_than_per_page_items(
         self,
-        page_views_provider: PageViewsAndDownloadsProvider,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         redis_client_mock.hgetall.return_value = {
@@ -155,7 +161,7 @@ class TestPageViewsAndDownloadsProvider:
             '2023-10-03': '15'
         }
 
-        result = page_views_provider.get_page_views_for_article_id_by_time_period(
+        result = page_views_and_downloads_provider.get_page_views_for_article_id_by_time_period(
             article_id='12345',
             by='day',
             per_page=2,
@@ -176,7 +182,7 @@ class TestPageViewsAndDownloadsProvider:
 
     def test_should_not_return_from_selected_page_number(
         self,
-        page_views_provider: PageViewsAndDownloadsProvider,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         redis_client_mock.hgetall.return_value = {
@@ -185,7 +191,7 @@ class TestPageViewsAndDownloadsProvider:
             '2023-10-03': '15'
         }
 
-        result = page_views_provider.get_page_views_for_article_id_by_time_period(
+        result = page_views_and_downloads_provider.get_page_views_for_article_id_by_time_period(
             article_id='12345',
             by='day',
             per_page=2,
@@ -203,7 +209,7 @@ class TestPageViewsAndDownloadsProvider:
 
     def test_should_return_empty_periods_if_selected_page_does_not_exist(
         self,
-        page_views_provider: PageViewsAndDownloadsProvider,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         redis_client_mock.hgetall.return_value = {
@@ -212,7 +218,7 @@ class TestPageViewsAndDownloadsProvider:
             '2023-10-03': '15'
         }
 
-        result = page_views_provider.get_page_views_for_article_id_by_time_period(
+        result = page_views_and_downloads_provider.get_page_views_for_article_id_by_time_period(
             article_id='12345',
             by='day',
             per_page=2,
@@ -228,16 +234,16 @@ class TestPageViewsAndDownloadsProvider:
     def test_should_replace_number_of_days_in_query(
         self,
         get_bq_result_from_bq_query_mock: MagicMock,
-        page_views_provider: PageViewsAndDownloadsProvider,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
     ):
         mock_bq_result = MagicMock()
         mock_bq_result.total_rows = 0
         get_bq_result_from_bq_query_mock.return_value = mock_bq_result
-        page_views_provider.refresh_data(number_of_days=123)
+        page_views_and_downloads_provider.refresh_data(number_of_days=123)
         get_bq_result_from_bq_query_mock.assert_called_with(
-            project_name=page_views_provider.gcp_project_name,
+            project_name=page_views_and_downloads_provider.gcp_project_name,
             query=get_query_with_replaced_number_of_days(
-                page_views_provider.page_views_query,
+                page_views_and_downloads_provider.page_views_query,
                 number_of_days=123
             )
         )
@@ -245,7 +251,7 @@ class TestPageViewsAndDownloadsProvider:
     def test_should_put_data_in_redis(
         self,
         get_bq_result_from_bq_query_mock: MagicMock,
-        page_views_provider: PageViewsAndDownloadsProvider,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         mock_bq_result = MagicMock()
@@ -256,7 +262,7 @@ class TestPageViewsAndDownloadsProvider:
             'page_view_count': 5
         }])
         get_bq_result_from_bq_query_mock.return_value = mock_bq_result
-        page_views_provider.refresh_data(number_of_days=3)
+        page_views_and_downloads_provider.refresh_data(number_of_days=3)
         redis_client_mock.hset.assert_called_once_with(
             'article:12345:page_views:by_date',
             '2023-10-01',
@@ -265,14 +271,14 @@ class TestPageViewsAndDownloadsProvider:
 
     def test_should_read_page_views_monthly_from_redis(
         self,
-        page_views_provider: PageViewsAndDownloadsProvider,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         redis_client_mock.hgetall.return_value = {
             '2023-10': '5',
             '2023-11': '10'
         }
-        result = page_views_provider.get_page_views_for_article_id_by_time_period(
+        result = page_views_and_downloads_provider.get_page_views_for_article_id_by_time_period(
             article_id='12345',
             by='month',
             per_page=10,
@@ -294,16 +300,16 @@ class TestPageViewsAndDownloadsProvider:
     def test_should_replace_number_of_months_in_query(
         self,
         get_bq_result_from_bq_query_mock: MagicMock,
-        page_views_provider: PageViewsAndDownloadsProvider,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
     ):
         mock_bq_result = MagicMock()
         mock_bq_result.total_rows = 0
         get_bq_result_from_bq_query_mock.return_value = mock_bq_result
-        page_views_provider.refresh_page_views_monthly(number_of_months=12)
+        page_views_and_downloads_provider.refresh_page_views_monthly(number_of_months=12)
         get_bq_result_from_bq_query_mock.assert_called_with(
-            project_name=page_views_provider.gcp_project_name,
+            project_name=page_views_and_downloads_provider.gcp_project_name,
             query=get_query_with_replaced_number_of_months(
-                page_views_provider.page_views_monthly_query,
+                page_views_and_downloads_provider.page_views_monthly_query,
                 number_of_months=12
             )
         )
@@ -311,7 +317,7 @@ class TestPageViewsAndDownloadsProvider:
     def test_should_put_data_in_redis_for_monthly_page_views(
         self,
         get_bq_result_from_bq_query_mock: MagicMock,
-        page_views_provider: PageViewsAndDownloadsProvider,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         mock_bq_result = MagicMock()
@@ -322,7 +328,7 @@ class TestPageViewsAndDownloadsProvider:
             'page_view_count': 5
         }])
         get_bq_result_from_bq_query_mock.return_value = mock_bq_result
-        page_views_provider.refresh_page_views_monthly(number_of_months=3)
+        page_views_and_downloads_provider.refresh_page_views_monthly(number_of_months=3)
         redis_client_mock.hset.assert_called_once_with(
             'article:12345:page_views:by_month',
             '2023-10',

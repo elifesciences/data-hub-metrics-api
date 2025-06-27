@@ -10,7 +10,7 @@ from data_hub_metrics_api.api_router_typing import (
     MetricTimePeriodResponseTypedDict
 )
 from data_hub_metrics_api.citations_provider import CitationsProvider
-from data_hub_metrics_api.page_views_provider import PageViewsAndDownloadsProvider
+from data_hub_metrics_api.page_views_and_downloads_provider import PageViewsAndDownloadsProvider
 
 
 LOGGER = logging.getLogger(__name__)
@@ -49,9 +49,9 @@ class MetricTimePeriodJsonResponse(JSONResponse):
 
 def create_api_router(
     citations_provider_list: Sequence[CitationsProvider],
-    page_views_provider: PageViewsAndDownloadsProvider
+    page_views_and_downloads_provider: PageViewsAndDownloadsProvider
 ) -> APIRouter:
-    assert page_views_provider is not None
+    assert page_views_and_downloads_provider is not None
     router = APIRouter()
 
     @router.get(
@@ -111,7 +111,7 @@ def create_api_router(
         per_page: PerPageQueryType = 20,
         page: PageQueryType = 1
     ) -> MetricTimePeriodResponseTypedDict:
-        return page_views_provider.get_page_views_for_article_id_by_time_period(
+        return page_views_and_downloads_provider.get_page_views_for_article_id_by_time_period(
             article_id=article_id,
             by=by,
             per_page=per_page,

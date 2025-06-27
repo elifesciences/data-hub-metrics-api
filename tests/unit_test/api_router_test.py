@@ -7,7 +7,7 @@ import pytest
 from data_hub_metrics_api.api_router import create_api_router
 from data_hub_metrics_api.api_router_typing import MetricTimePeriodResponseTypedDict
 from data_hub_metrics_api.citations_provider import CitationsProvider
-from data_hub_metrics_api.page_views_provider import PageViewsAndDownloadsProvider
+from data_hub_metrics_api.page_views_and_downloads_provider import PageViewsAndDownloadsProvider
 
 
 METRIC_TIME_PERIOD_RESPONSE_DICT_1: MetricTimePeriodResponseTypedDict = {
@@ -22,19 +22,22 @@ def _citations_provider_mock() -> MagicMock:
     return MagicMock(nam='citations_provider_mock', spec=CitationsProvider)
 
 
-@pytest.fixture(name='page_views_provider_mock')
-def _page_views_provider_mock() -> MagicMock:
-    return MagicMock(nam='page_views_provider_mock', spec=PageViewsAndDownloadsProvider)
+@pytest.fixture(name='page_views_and_downloads_provider_mock')
+def _page_views_and_downloads_provider_mock() -> MagicMock:
+    return MagicMock(
+        name='page_views_and_downloads_provider_mock',
+        spec=PageViewsAndDownloadsProvider
+    )
 
 
 def create_test_client(
     citations_provider_list: Sequence[CitationsProvider],
-    page_views_provider: PageViewsAndDownloadsProvider
+    page_views_and_downloads_provider: PageViewsAndDownloadsProvider
 ) -> TestClient:
     app = FastAPI()
     app.include_router(create_api_router(
         citations_provider_list=citations_provider_list,
-        page_views_provider=page_views_provider
+        page_views_and_downloads_provider=page_views_and_downloads_provider
     ))
     client = TestClient(app)
     return client
@@ -43,11 +46,11 @@ def create_test_client(
 @pytest.fixture(name='test_client')
 def _test_client(
     citations_provider_mock: MagicMock,
-    page_views_provider_mock: MagicMock
+    page_views_and_downloads_provider_mock: MagicMock
 ) -> TestClient:
     return create_test_client(
         citations_provider_list=[citations_provider_mock],
-        page_views_provider=page_views_provider_mock
+        page_views_and_downloads_provider=page_views_and_downloads_provider_mock
     )
 
 
@@ -121,10 +124,10 @@ class TestProvideCitations:
     def test_should_return_page_views_by_article_id_and_time_period(
         self,
         test_client: TestClient,
-        page_views_provider_mock: MagicMock
+        page_views_and_downloads_provider_mock: MagicMock
     ):
         (
-            page_views_provider_mock
+            page_views_and_downloads_provider_mock
             .get_page_views_for_article_id_by_time_period
             .return_value
         ) = METRIC_TIME_PERIOD_RESPONSE_DICT_1
