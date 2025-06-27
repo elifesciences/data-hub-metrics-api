@@ -43,9 +43,10 @@ class PageViewsProvider:
     ):
         self.redis_client = redis_client
         self.gcp_project_name = gcp_project_name
-        self.page_view_totals_query = (
-            Path(get_sql_path('page_view_and_download_totals_query.sql')).read_text(encoding='utf-8')
-        )
+        self.page_view_and_download_totals_query = Path(
+            get_sql_path('page_view_and_download_totals_query.sql')
+        ).read_text(encoding='utf-8')
+
         self.page_views_query = (
             Path(get_sql_path('page_views_query.sql')).read_text(encoding='utf-8')
         )
@@ -109,7 +110,7 @@ class PageViewsProvider:
         LOGGER.info('Refreshing page view totals data from BigQuery...')
         bq_result = get_bq_result_from_bq_query(
             project_name=self.gcp_project_name,
-            query=self.page_view_totals_query
+            query=self.page_view_and_download_totals_query
         )
         total_rows = bq_result.total_rows
         LOGGER.info('Total rows from BigQuery: %d', total_rows)

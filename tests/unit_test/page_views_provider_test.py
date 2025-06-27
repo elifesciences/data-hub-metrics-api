@@ -94,7 +94,7 @@ class TestPageViewsProvider:
         page_views_provider.refresh_page_view_totals()
         get_bq_result_from_bq_query_mock.assert_called_with(
             project_name=page_views_provider.gcp_project_name,
-            query=page_views_provider.page_view_totals_query
+            query=page_views_provider.page_view_and_download_totals_query
         )
         redis_client_mock.set.assert_called_once_with(
             'article:12345:page_views',
