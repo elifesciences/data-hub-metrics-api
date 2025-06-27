@@ -344,3 +344,26 @@ class TestPageViewsAndDownloadsProvider:
         assert page_views_and_downloads_provider.get_download_total_for_article_id(
             article_id='12345'
         ) == 0
+
+    def test_should_put_download_totals_in_redis(
+        self,
+        get_bq_result_from_bq_query_mock: MagicMock,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
+        redis_client_mock: MagicMock
+    ):
+        mock_bq_result = MagicMock()
+        mock_bq_result.total_rows = 1
+        mock_bq_result.__iter__.return_value = iter([{
+            'article_id': '12345',
+            'download_count': 5
+        }])
+        get_bq_result_from_bq_query_mock.return_value = mock_bq_result
+        page_views_and_downloads_provider.refresh_download_totals()
+        get_bq_result_from_bq_query_mock.assert_called_with(
+            project_name=page_views_and_downloads_provider.gcp_project_name,
+            query=page_views_and_downloads_provider.page_view_and_download_totals_query
+        )
+        redis_client_mock.set.assert_called_once_with(
+            'article:12345:downloads',
+            5
+        )
