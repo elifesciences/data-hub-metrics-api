@@ -89,7 +89,7 @@ class TestPageViewsAndDownloadsProvider:
         )
         assert result['totalValue'] == 123
 
-    def test_should_put_page_view_totals_in_redis(
+    def test_should_put_page_view_and_download_totals_in_redis(
         self,
         get_bq_result_from_bq_query_mock: MagicMock,
         page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
