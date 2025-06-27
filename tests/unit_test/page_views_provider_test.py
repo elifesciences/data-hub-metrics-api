@@ -4,7 +4,7 @@ from unittest.mock import ANY, MagicMock, patch
 import pytest
 
 from data_hub_metrics_api.page_views_provider import (
-    PageViewsProvider,
+    PageViewsAndDownloadsProvider,
     get_query_with_replaced_number_of_days,
     get_query_with_replaced_number_of_months
 )
@@ -17,8 +17,8 @@ def _redis_client_mock() -> MagicMock:
 
 
 @pytest.fixture(name='page_views_provider')
-def _page_views_provider(redis_client_mock: MagicMock) -> PageViewsProvider:
-    return PageViewsProvider(redis_client_mock)
+def _page_views_provider(redis_client_mock: MagicMock) -> PageViewsAndDownloadsProvider:
+    return PageViewsAndDownloadsProvider(redis_client_mock)
 
 
 @pytest.fixture(name='get_bq_result_from_bq_query_mock', autouse=True)
@@ -46,10 +46,10 @@ class TestGetQueryWithReplacedNumberOfMonths:
         ) == 'SELECT 12'
 
 
-class TestPageViewsProvider:
+class TestPageViewsAndDownloadsProvider:
     def test_should_return_zero_for_total_page_views_if_no_page_views(
         self,
-        page_views_provider: PageViewsProvider,
+        page_views_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         redis_client_mock.get.return_value = None
@@ -57,7 +57,7 @@ class TestPageViewsProvider:
 
     def test_should_return_total_page_views_from_redis(
         self,
-        page_views_provider: PageViewsProvider,
+        page_views_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         redis_client_mock.get.return_value = '123'
@@ -66,7 +66,7 @@ class TestPageViewsProvider:
 
     def test_should_return_total_page_views_as_total_value(
         self,
-        page_views_provider: PageViewsProvider,
+        page_views_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         redis_client_mock.get.return_value = '123'
@@ -81,7 +81,7 @@ class TestPageViewsProvider:
     def test_should_put_page_view_totals_in_redis(
         self,
         get_bq_result_from_bq_query_mock: MagicMock,
-        page_views_provider: PageViewsProvider,
+        page_views_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         mock_bq_result = MagicMock()
@@ -103,7 +103,7 @@ class TestPageViewsProvider:
 
     def test_should_return_zero_if_there_are_no_page_views(
         self,
-        page_views_provider: PageViewsProvider
+        page_views_provider: PageViewsAndDownloadsProvider
     ):
         assert page_views_provider.get_page_views_for_article_id_by_time_period(
             article_id='12345',
@@ -118,7 +118,7 @@ class TestPageViewsProvider:
 
     def test_should_read_page_views_from_redis(
         self,
-        page_views_provider: PageViewsProvider,
+        page_views_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         redis_client_mock.hgetall.return_value = {
@@ -146,7 +146,7 @@ class TestPageViewsProvider:
 
     def test_should_not_return_more_than_per_page_items(
         self,
-        page_views_provider: PageViewsProvider,
+        page_views_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         redis_client_mock.hgetall.return_value = {
@@ -176,7 +176,7 @@ class TestPageViewsProvider:
 
     def test_should_not_return_from_selected_page_number(
         self,
-        page_views_provider: PageViewsProvider,
+        page_views_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         redis_client_mock.hgetall.return_value = {
@@ -203,7 +203,7 @@ class TestPageViewsProvider:
 
     def test_should_return_empty_periods_if_selected_page_does_not_exist(
         self,
-        page_views_provider: PageViewsProvider,
+        page_views_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         redis_client_mock.hgetall.return_value = {
@@ -228,7 +228,7 @@ class TestPageViewsProvider:
     def test_should_replace_number_of_days_in_query(
         self,
         get_bq_result_from_bq_query_mock: MagicMock,
-        page_views_provider: PageViewsProvider,
+        page_views_provider: PageViewsAndDownloadsProvider,
     ):
         mock_bq_result = MagicMock()
         mock_bq_result.total_rows = 0
@@ -245,7 +245,7 @@ class TestPageViewsProvider:
     def test_should_put_data_in_redis(
         self,
         get_bq_result_from_bq_query_mock: MagicMock,
-        page_views_provider: PageViewsProvider,
+        page_views_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         mock_bq_result = MagicMock()
@@ -265,7 +265,7 @@ class TestPageViewsProvider:
 
     def test_should_read_page_views_monthly_from_redis(
         self,
-        page_views_provider: PageViewsProvider,
+        page_views_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         redis_client_mock.hgetall.return_value = {
@@ -294,7 +294,7 @@ class TestPageViewsProvider:
     def test_should_replace_number_of_months_in_query(
         self,
         get_bq_result_from_bq_query_mock: MagicMock,
-        page_views_provider: PageViewsProvider,
+        page_views_provider: PageViewsAndDownloadsProvider,
     ):
         mock_bq_result = MagicMock()
         mock_bq_result.total_rows = 0
@@ -311,7 +311,7 @@ class TestPageViewsProvider:
     def test_should_put_data_in_redis_for_monthly_page_views(
         self,
         get_bq_result_from_bq_query_mock: MagicMock,
-        page_views_provider: PageViewsProvider,
+        page_views_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         mock_bq_result = MagicMock()

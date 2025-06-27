@@ -35,7 +35,7 @@ def get_query_with_replaced_number_of_months(
     return query.replace(r'{number_of_months}', str(number_of_months))
 
 
-class PageViewsProvider:
+class PageViewsAndDownloadsProvider:
     def __init__(
         self,
         redis_client: Redis,

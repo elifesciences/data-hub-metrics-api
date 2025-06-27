@@ -14,7 +14,7 @@ def _get_redis_client_mock() -> Iterator[MagicMock]:
 
 @pytest.fixture(name="page_views_provider_class_mock", autouse=True)
 def _page_views_provider_class_mock() -> Iterator[MagicMock]:
-    with patch.object(cli_module, "PageViewsProvider") as mock:
+    with patch.object(cli_module, "PageViewsAndDownloadsProvider") as mock:
         yield mock
 
 
