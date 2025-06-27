@@ -181,19 +181,3 @@ class PageViewsAndDownloadsProvider:
                 row['page_view_count']  # type: ignore[arg-type]
             )
         LOGGER.info('Done: Refreshing monthly page views data from BigQuery')
-
-    def refresh_download_totals(self) -> None:
-        LOGGER.info('Refreshing download totals data from BigQuery...')
-        bq_result = get_bq_result_from_bq_query(
-            project_name=self.gcp_project_name,
-            query=self.page_view_and_download_totals_query
-        )
-        total_rows = bq_result.total_rows
-        LOGGER.info('Total rows from BigQuery: %d', total_rows)
-
-        for row in tqdm(bq_result, total=total_rows, desc="Loading Redis"):
-            self.redis_client.set(
-                f'article:{row['article_id']}:downloads',
-                row['download_count']  # type: ignore[arg-type]
-            )
-        LOGGER.info('Done: Refreshing download totals data from BigQuery')
