@@ -117,7 +117,7 @@ class PageViewsAndDownloadsProvider:
         }
 
     def refresh_page_view_totals(self) -> None:
-        LOGGER.info('Refreshing page view totals data from BigQuery...')
+        LOGGER.info('Refreshing page view and download totals data from BigQuery...')
         bq_result = get_bq_result_from_bq_query(
             project_name=self.gcp_project_name,
             query=self.page_view_and_download_totals_query
@@ -130,7 +130,11 @@ class PageViewsAndDownloadsProvider:
                 f'article:{row['article_id']}:page_views',
                 row['page_view_count']  # type: ignore[arg-type]
             )
-        LOGGER.info('Done: Refreshing page view totals data from BigQuery')
+            self.redis_client.set(
+                f'article:{row['article_id']}:downloads',
+                row['download_count']  # type: ignore[arg-type]
+            )
+        LOGGER.info('Done: Refreshing page view and download totals data from BigQuery')
 
     def refresh_data(
         self,

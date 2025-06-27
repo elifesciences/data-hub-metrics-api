@@ -1,6 +1,6 @@
 from datetime import date
 from typing import Iterator
-from unittest.mock import ANY, MagicMock, patch
+from unittest.mock import ANY, MagicMock, call, patch
 import pytest
 
 from data_hub_metrics_api.page_views_and_downloads_provider import (
@@ -14,6 +14,11 @@ import data_hub_metrics_api.page_views_and_downloads_provider as views_downloads
 @pytest.fixture(name='redis_client_mock', autouse=True)
 def _redis_client_mock() -> MagicMock:
     return MagicMock(name='redis_client')
+
+
+@pytest.fixture(name='redis_client_set_mock')
+def _redis_client_set_mock(redis_client_mock: MagicMock) -> MagicMock:
+    return redis_client_mock.set
 
 
 @pytest.fixture(name='page_views_and_downloads_provider')
@@ -88,13 +93,14 @@ class TestPageViewsAndDownloadsProvider:
         self,
         get_bq_result_from_bq_query_mock: MagicMock,
         page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
-        redis_client_mock: MagicMock
+        redis_client_set_mock: MagicMock
     ):
         mock_bq_result = MagicMock()
         mock_bq_result.total_rows = 1
         mock_bq_result.__iter__.return_value = iter([{
             'article_id': '12345',
-            'page_view_count': 5
+            'page_view_count': 5,
+            'download_count': 2
         }])
         get_bq_result_from_bq_query_mock.return_value = mock_bq_result
         page_views_and_downloads_provider.refresh_page_view_totals()
@@ -102,10 +108,10 @@ class TestPageViewsAndDownloadsProvider:
             project_name=page_views_and_downloads_provider.gcp_project_name,
             query=page_views_and_downloads_provider.page_view_and_download_totals_query
         )
-        redis_client_mock.set.assert_called_once_with(
-            'article:12345:page_views',
-            5
-        )
+        redis_client_set_mock.assert_has_calls([
+            call('article:12345:page_views', 5),
+            call('article:12345:downloads', 2)
+        ])
 
     def test_should_return_zero_if_there_are_no_page_views(
         self,
