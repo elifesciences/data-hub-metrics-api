@@ -28,9 +28,13 @@ def _page_views_and_downloads_provider_mock(
 
 
 class TestMain:
-    def test_should_call_refresh_page_view_totals_on_page_views_and_downloads_provider(
+    def test_should_call_refresh_page_view_and_download_totals_on_the_provider(
         self,
         page_views_and_downloads_provider_mock: MagicMock,
     ):
         main()
-        page_views_and_downloads_provider_mock.refresh_page_view_totals.assert_called_with()
+        (
+            page_views_and_downloads_provider_mock
+            .refresh_page_view_and_download_totals
+            .assert_called_with()
+        )
