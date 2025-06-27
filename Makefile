@@ -74,8 +74,8 @@ dev-refresh-page-views-monthy:
 	$(PYTHON) -m data_hub_metrics_api.refresh_data.page_views_monthly_cli \
 		--number-of-months=$(NUMBER_OF_MONTHS)
 
-dev-refresh-page-view-totals:
-	$(PYTHON) -m data_hub_metrics_api.refresh_data.page_view_totals_cli
+dev-refresh-page-view-and-download-totals:
+	$(PYTHON) -m data_hub_metrics_api.refresh_data.page_view_and_download_totals_cli
 
 
 build:
