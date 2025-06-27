@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from data_hub_metrics_api.refresh_data.page_views_monthly_cli import main
-import data_hub_metrics_api.refresh_data.page_views_monthly_cli as cli_module
+from data_hub_metrics_api.refresh_data.page_view_and_download_totals_cli import main
+import data_hub_metrics_api.refresh_data.page_view_and_download_totals_cli as cli_module
 
 
 @pytest.fixture(name="get_redis_client_mock", autouse=True)
@@ -28,11 +28,13 @@ def _page_views_and_downloads_provider_mock(
 
 
 class TestMain:
-    def test_should_call_refresh_data_on_page_views_and_downloads_provider(
+    def test_should_call_refresh_page_view_and_download_totals_on_the_provider(
         self,
         page_views_and_downloads_provider_mock: MagicMock,
     ):
-        main(['--number-of-months=12'])
-        page_views_and_downloads_provider_mock.refresh_page_views_monthly.assert_called_with(
-            number_of_months=12
+        main()
+        (
+            page_views_and_downloads_provider_mock
+            .refresh_page_view_and_download_totals
+            .assert_called_with()
         )

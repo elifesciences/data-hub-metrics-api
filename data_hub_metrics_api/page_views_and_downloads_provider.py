@@ -35,7 +35,7 @@ def get_query_with_replaced_number_of_months(
     return query.replace(r'{number_of_months}', str(number_of_months))
 
 
-class PageViewsProvider:
+class PageViewsAndDownloadsProvider:
     def __init__(
         self,
         redis_client: Redis,
@@ -43,9 +43,10 @@ class PageViewsProvider:
     ):
         self.redis_client = redis_client
         self.gcp_project_name = gcp_project_name
-        self.page_view_totals_query = (
-            Path(get_sql_path('page_view_totals_query.sql')).read_text(encoding='utf-8')
-        )
+        self.page_view_and_download_totals_query = Path(
+            get_sql_path('page_view_and_download_totals_query.sql')
+        ).read_text(encoding='utf-8')
+
         self.page_views_query = (
             Path(get_sql_path('page_views_query.sql')).read_text(encoding='utf-8')
         )
@@ -60,6 +61,16 @@ class PageViewsProvider:
         LOGGER.debug('page-views: article_id=%r', article_id)
         redis_value: Optional[str] = self.redis_client.get(  # type: ignore[assignment]
             f'article:{article_id}:page_views'
+        )
+        return int(redis_value or 0)
+
+    def get_download_total_for_article_id(
+        self,
+        article_id: str
+    ) -> int:
+        LOGGER.debug('downloads: article_id=%r', article_id)
+        redis_value: Optional[str] = self.redis_client.get(  # type: ignore[assignment]
+            f'article:{article_id}:downloads'
         )
         return int(redis_value or 0)
 
@@ -105,11 +116,29 @@ class PageViewsProvider:
             ]
         }
 
-    def refresh_page_view_totals(self) -> None:
-        LOGGER.info('Refreshing page view totals data from BigQuery...')
+    def get_downloads_for_article_id_by_time_period(
+        self,
+        article_id: str,
+        by: Literal['day', 'month'],
+        per_page: int,
+        page: int
+    ) -> MetricTimePeriodResponseTypedDict:
+        LOGGER.info(
+            'downloads: article_id=%r, by=%r, per_page=%r, page=%r',
+            article_id, by, per_page, page
+        )
+        total_value = self.get_download_total_for_article_id(article_id)
+        return {
+            'totalPeriods': 0,
+            'totalValue': total_value,
+            'periods': []
+        }
+
+    def refresh_page_view_and_download_totals(self) -> None:
+        LOGGER.info('Refreshing page view and download totals data from BigQuery...')
         bq_result = get_bq_result_from_bq_query(
             project_name=self.gcp_project_name,
-            query=self.page_view_totals_query
+            query=self.page_view_and_download_totals_query
         )
         total_rows = bq_result.total_rows
         LOGGER.info('Total rows from BigQuery: %d', total_rows)
@@ -119,7 +148,11 @@ class PageViewsProvider:
                 f'article:{row['article_id']}:page_views',
                 row['page_view_count']  # type: ignore[arg-type]
             )
-        LOGGER.info('Done: Refreshing page view totals data from BigQuery')
+            self.redis_client.set(
+                f'article:{row['article_id']}:downloads',
+                row['download_count']  # type: ignore[arg-type]
+            )
+        LOGGER.info('Done: Refreshing page view and download totals data from BigQuery')
 
     def refresh_data(
         self,
