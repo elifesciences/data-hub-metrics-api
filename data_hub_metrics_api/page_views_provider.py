@@ -44,7 +44,7 @@ class PageViewsProvider:
         self.redis_client = redis_client
         self.gcp_project_name = gcp_project_name
         self.page_view_totals_query = (
-            Path(get_sql_path('page_view_totals_query.sql')).read_text(encoding='utf-8')
+            Path(get_sql_path('page_view_and_download_totals_query.sql')).read_text(encoding='utf-8')
         )
         self.page_views_query = (
             Path(get_sql_path('page_views_query.sql')).read_text(encoding='utf-8')
