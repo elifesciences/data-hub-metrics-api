@@ -64,6 +64,13 @@ class PageViewsAndDownloadsProvider:
         )
         return int(redis_value or 0)
 
+    def get_download_total_for_article_id(
+        self,
+        article_id: str
+    ) -> int:
+        LOGGER.debug('downloads: article_id=%r', article_id)
+        return 0
+
     def get_page_views_for_article_id_by_time_period(
         self,
         article_id: str,

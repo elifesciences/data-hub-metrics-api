@@ -334,3 +334,13 @@ class TestPageViewsAndDownloadsProvider:
             '2023-10',
             5
         )
+
+    def test_should_return_zero_for_total_downloads_if_no_downloads(
+        self,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.get.return_value = None
+        assert page_views_and_downloads_provider.get_download_total_for_article_id(
+            article_id='12345'
+        ) == 0
