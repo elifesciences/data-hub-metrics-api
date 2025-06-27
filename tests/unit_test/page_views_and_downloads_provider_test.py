@@ -103,7 +103,7 @@ class TestPageViewsAndDownloadsProvider:
             'download_count': 2
         }])
         get_bq_result_from_bq_query_mock.return_value = mock_bq_result
-        page_views_and_downloads_provider.refresh_page_view_totals()
+        page_views_and_downloads_provider.refresh_page_view_and_download_totals()
         get_bq_result_from_bq_query_mock.assert_called_with(
             project_name=page_views_and_downloads_provider.gcp_project_name,
             query=page_views_and_downloads_provider.page_view_and_download_totals_query

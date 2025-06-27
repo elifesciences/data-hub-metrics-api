@@ -9,7 +9,7 @@ LOGGER = logging.getLogger(__name__)
 def main():
     redis_client = get_redis_client()
     page_views_and_downloads_provider = PageViewsAndDownloadsProvider(redis_client)
-    page_views_and_downloads_provider.refresh_page_view_totals()
+    page_views_and_downloads_provider.refresh_page_view_and_download_totals()
 
 
 if __name__ == "__main__":

@@ -116,7 +116,7 @@ class PageViewsAndDownloadsProvider:
             ]
         }
 
-    def refresh_page_view_totals(self) -> None:
+    def refresh_page_view_and_download_totals(self) -> None:
         LOGGER.info('Refreshing page view and download totals data from BigQuery...')
         bq_result = get_bq_result_from_bq_query(
             project_name=self.gcp_project_name,
