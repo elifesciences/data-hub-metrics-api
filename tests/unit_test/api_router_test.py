@@ -121,6 +121,21 @@ class TestProvideCitations:
         expected_content_type = 'application/vnd.elife.metric-citations+json; version=1'
         assert response_headers['Content-Type'] == expected_content_type
 
+    def test_should_return_downloads_by_article_id_and_time_period(
+        self,
+        test_client: TestClient,
+        page_views_and_downloads_provider_mock: MagicMock
+    ):
+        (
+            page_views_and_downloads_provider_mock
+            .get_downloads_for_article_id_by_time_period
+            .return_value
+        ) = METRIC_TIME_PERIOD_RESPONSE_DICT_1
+        response = test_client.get('/metrics/article/85111/downloads')
+        response.raise_for_status()
+        actual_response_json = response.json()
+        assert actual_response_json == METRIC_TIME_PERIOD_RESPONSE_DICT_1
+
     def test_should_return_page_views_by_article_id_and_time_period(
         self,
         test_client: TestClient,

@@ -116,6 +116,23 @@ class PageViewsAndDownloadsProvider:
             ]
         }
 
+    def get_downloads_for_article_id_by_time_period(
+        self,
+        article_id: str,
+        by: Literal['day', 'month'],
+        per_page: int,
+        page: int
+    ) -> MetricTimePeriodResponseTypedDict:
+        LOGGER.info(
+            'downloads: article_id=%r, by=%r, per_page=%r, page=%r',
+            article_id, by, per_page, page
+        )
+        return {
+            'totalPeriods': 0,
+            'totalValue': 0,
+            'periods': []
+        }
+
     def refresh_page_view_and_download_totals(self) -> None:
         LOGGER.info('Refreshing page view and download totals data from BigQuery...')
         bq_result = get_bq_result_from_bq_query(
