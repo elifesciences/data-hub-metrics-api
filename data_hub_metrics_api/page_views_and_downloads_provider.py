@@ -69,7 +69,10 @@ class PageViewsAndDownloadsProvider:
         article_id: str
     ) -> int:
         LOGGER.debug('downloads: article_id=%r', article_id)
-        return 0
+        redis_value: Optional[str] = self.redis_client.get(  # type: ignore[assignment]
+            f'article:{article_id}:downloads'
+        )
+        return int(redis_value or 0)
 
     def get_page_views_for_article_id_by_time_period(
         self,
