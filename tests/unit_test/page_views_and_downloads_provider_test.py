@@ -361,3 +361,17 @@ class TestPageViewsAndDownloadsProvider:
             article_id='12345'
         ) == 12
         redis_client_mock.get.assert_called_with('article:12345:downloads')
+
+    def test_should_return_total_downloads_as_total_value(
+        self,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.get.return_value = '12'
+        result = page_views_and_downloads_provider.get_downloads_for_article_id_by_time_period(
+            article_id='12345',
+            by='day',
+            per_page=10,
+            page=1
+        )
+        assert result['totalValue'] == 12

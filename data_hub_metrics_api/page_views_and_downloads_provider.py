@@ -127,9 +127,10 @@ class PageViewsAndDownloadsProvider:
             'downloads: article_id=%r, by=%r, per_page=%r, page=%r',
             article_id, by, per_page, page
         )
+        total_value = self.get_download_total_for_article_id(article_id)
         return {
             'totalPeriods': 0,
-            'totalValue': 0,
+            'totalValue': total_value,
             'periods': []
         }
 
