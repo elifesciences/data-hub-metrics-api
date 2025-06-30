@@ -55,8 +55,9 @@ class PageViewsAndDownloadsProvider:
             Path(get_sql_path('page_views_and_downloads_daily_query.sql'))
             .read_text(encoding='utf-8')
         )
-        self.page_views_monthly_query = (
-            Path(get_sql_path('page_views_monthly_query.sql')).read_text(encoding='utf-8')
+        self.page_views_and_downloads_monthly_query = (
+            Path(get_sql_path('page_views_and_downloads_monthly_query.sql'))
+            .read_text(encoding='utf-8')
         )
 
     def get_metric_total_for_article_id(
@@ -173,7 +174,7 @@ class PageViewsAndDownloadsProvider:
         bq_result = get_bq_result_from_bq_query(
             project_name=self.gcp_project_name,
             query=get_query_with_replaced_number_of_months(
-                self.page_views_monthly_query,
+                self.page_views_and_downloads_monthly_query,
                 number_of_months=number_of_months
             )
         )
