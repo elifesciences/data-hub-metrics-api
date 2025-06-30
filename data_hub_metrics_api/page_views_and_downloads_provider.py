@@ -187,4 +187,9 @@ class PageViewsAndDownloadsProvider:
                 row['year_month'],
                 row['page_view_count']  # type: ignore[arg-type]
             )
+            self.redis_client.hset(
+                f'article:{row['article_id']}:downloads:by_month',
+                row['year_month'],
+                row['download_count']  # type: ignore[arg-type]
+            )
         LOGGER.info('Done: Refreshing monthly page views and downloads from BigQuery')

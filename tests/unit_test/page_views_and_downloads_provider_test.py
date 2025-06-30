@@ -285,7 +285,9 @@ class TestPageViewsAndDownloadsProvider:
         mock_bq_result = MagicMock()
         mock_bq_result.total_rows = 0
         get_bq_result_from_bq_query_mock.return_value = mock_bq_result
-        page_views_and_downloads_provider.refresh_page_views_and_downloads_monthly(number_of_months=12)
+        page_views_and_downloads_provider.refresh_page_views_and_downloads_monthly(
+            number_of_months=12
+        )
         get_bq_result_from_bq_query_mock.assert_called_with(
             project_name=page_views_and_downloads_provider.gcp_project_name,
             query=get_query_with_replaced_number_of_months(
@@ -298,19 +300,21 @@ class TestPageViewsAndDownloadsProvider:
         self,
         get_bq_result_from_bq_query_mock: MagicMock,
         page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
-        redis_client_mock: MagicMock
+        redis_client_hset_mock: MagicMock
     ):
         mock_bq_result = MagicMock()
         mock_bq_result.total_rows = 1
         mock_bq_result.__iter__.return_value = iter([{
             'article_id': '12345',
             'year_month': '2023-10',
-            'page_view_count': 5
+            'page_view_count': 5,
+            'download_count': 2
         }])
         get_bq_result_from_bq_query_mock.return_value = mock_bq_result
-        page_views_and_downloads_provider.refresh_page_views_and_downloads_monthly(number_of_months=3)
-        redis_client_mock.hset.assert_called_once_with(
-            'article:12345:page_views:by_month',
-            '2023-10',
-            5
+        page_views_and_downloads_provider.refresh_page_views_and_downloads_monthly(
+            number_of_months=3
         )
+        redis_client_hset_mock.assert_has_calls([
+            call('article:12345:page_views:by_month', '2023-10', 5),
+            call('article:12345:downloads:by_month', '2023-10', 2)
+        ])
