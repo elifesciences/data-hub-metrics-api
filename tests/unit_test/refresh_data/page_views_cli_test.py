@@ -31,6 +31,8 @@ class TestMain:
         page_views_and_downloads_provider_mock: MagicMock,
     ):
         main(['--number-of-days=123'])
-        page_views_and_downloads_provider_mock.refresh_data.assert_called_with(
-            number_of_days=123
+        (
+            page_views_and_downloads_provider_mock
+            .refresh_page_views_and_downloads_daily
+            .assert_called_with(number_of_days=123)
         )

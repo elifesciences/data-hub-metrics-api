@@ -250,7 +250,7 @@ class TestPageViewsAndDownloadsProvider:
         mock_bq_result = MagicMock()
         mock_bq_result.total_rows = 0
         get_bq_result_from_bq_query_mock.return_value = mock_bq_result
-        page_views_and_downloads_provider.refresh_data(number_of_days=123)
+        page_views_and_downloads_provider.refresh_page_views_and_downloads_daily(number_of_days=123)
         get_bq_result_from_bq_query_mock.assert_called_with(
             project_name=page_views_and_downloads_provider.gcp_project_name,
             query=get_query_with_replaced_number_of_days(
@@ -274,7 +274,7 @@ class TestPageViewsAndDownloadsProvider:
             'download_count': 2
         }])
         get_bq_result_from_bq_query_mock.return_value = mock_bq_result
-        page_views_and_downloads_provider.refresh_data(number_of_days=3)
+        page_views_and_downloads_provider.refresh_page_views_and_downloads_daily(number_of_days=3)
         redis_client_hset_mock.assert_has_calls([
             call('article:12345:page_views:by_date', '2023-10-01', 5),
             call('article:12345:downloads:by_date', '2023-10-01', 2)
