@@ -4,11 +4,16 @@ from unittest.mock import ANY, MagicMock, call, patch
 import pytest
 
 from data_hub_metrics_api.page_views_and_downloads_provider import (
+    MetricNameLiteral,
     PageViewsAndDownloadsProvider,
     get_query_with_replaced_number_of_days,
     get_query_with_replaced_number_of_months
 )
 import data_hub_metrics_api.page_views_and_downloads_provider as views_downloads_provider_module
+
+
+# Note: this could be any of the valid metric names
+METRIC_NAME_1: MetricNameLiteral = 'page_views'
 
 
 @pytest.fixture(name='redis_client_mock', autouse=True)
@@ -67,7 +72,7 @@ class TestPageViewsAndDownloadsProvider:
         redis_client_mock.get.return_value = None
         assert page_views_and_downloads_provider.get_metric_total_for_article_id(
             article_id='12345',
-            metric_name='page_views'
+            metric_name=METRIC_NAME_1
         ) == 0
 
     def test_should_return_total_metric_value_from_redis(
@@ -78,9 +83,9 @@ class TestPageViewsAndDownloadsProvider:
         redis_client_mock.get.return_value = '123'
         assert page_views_and_downloads_provider.get_metric_total_for_article_id(
             article_id='12345',
-            metric_name='page_views'
+            metric_name=METRIC_NAME_1
         ) == 123
-        redis_client_mock.get.assert_called_with('article:12345:page_views')
+        redis_client_mock.get.assert_called_with(f'article:12345:{METRIC_NAME_1}')
 
     def test_should_return_total_metric_value_as_total_value(
         self,
@@ -90,7 +95,7 @@ class TestPageViewsAndDownloadsProvider:
         redis_client_mock.get.return_value = '123'
         result = page_views_and_downloads_provider.get_metric_for_article_id_by_time_period(
             article_id='12345',
-            metric_name='page_views',
+            metric_name=METRIC_NAME_1,
             by='day',
             per_page=10,
             page=1
@@ -108,12 +113,12 @@ class TestPageViewsAndDownloadsProvider:
         }
         result = page_views_and_downloads_provider.get_metric_for_article_id_by_time_period(
             article_id='12345',
-            metric_name='page_views',
+            metric_name=METRIC_NAME_1,
             by='day',
             per_page=10,
             page=1
         )
-        redis_client_mock.hgetall.assert_called_once_with('article:12345:page_views:by_date')
+        redis_client_mock.hgetall.assert_called_once_with(f'article:12345:{METRIC_NAME_1}:by_date')
         assert result == {
             'totalPeriods': 2,
             'totalValue': ANY,
@@ -139,7 +144,7 @@ class TestPageViewsAndDownloadsProvider:
 
         result = page_views_and_downloads_provider.get_metric_for_article_id_by_time_period(
             article_id='12345',
-            metric_name='page_views',
+            metric_name=METRIC_NAME_1,
             by='day',
             per_page=2,
             page=1
@@ -170,7 +175,7 @@ class TestPageViewsAndDownloadsProvider:
 
         result = page_views_and_downloads_provider.get_metric_for_article_id_by_time_period(
             article_id='12345',
-            metric_name='page_views',
+            metric_name=METRIC_NAME_1,
             by='day',
             per_page=2,
             page=2
@@ -198,7 +203,7 @@ class TestPageViewsAndDownloadsProvider:
 
         result = page_views_and_downloads_provider.get_metric_for_article_id_by_time_period(
             article_id='12345',
-            metric_name='page_views',
+            metric_name=METRIC_NAME_1,
             by='day',
             per_page=2,
             page=3

@@ -15,6 +15,9 @@ from data_hub_metrics_api.utils.bigquery import get_bq_result_from_bq_query
 LOGGER = logging.getLogger(__name__)
 
 
+MetricNameLiteral = Literal['page_views', 'downloads']
+
+
 class BigQueryResultRow(TypedDict):
     article_id: str
     event_date: date
@@ -59,7 +62,7 @@ class PageViewsAndDownloadsProvider:
     def get_metric_total_for_article_id(
         self,
         article_id: str,
-        metric_name: Literal['page_views', 'downloads']
+        metric_name: MetricNameLiteral
     ) -> int:
         LOGGER.debug('page-views: article_id=%r', article_id)
         redis_value: Optional[str] = self.redis_client.get(  # type: ignore[assignment]
@@ -71,7 +74,7 @@ class PageViewsAndDownloadsProvider:
         self,
         article_id: str,
         *,
-        metric_name: Literal['page_views', 'downloads'],
+        metric_name: MetricNameLiteral,
         by: Literal['day', 'month'],
         per_page: int,
         page: int
