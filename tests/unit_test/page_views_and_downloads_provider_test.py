@@ -380,3 +380,112 @@ class TestPageViewsAndDownloadsProvider:
             page=1
         )
         assert result['totalValue'] == 12
+
+    def test_should_read_daily_downloads_from_redis(
+        self,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.hgetall.return_value = {
+            '2023-10-01': '5',
+            '2023-10-02': '10'
+        }
+        result = page_views_and_downloads_provider.get_downloads_for_article_id_by_time_period(
+            article_id='12345',
+            by='day',
+            per_page=10,
+            page=1
+        )
+        redis_client_mock.hgetall.assert_called_once_with('article:12345:downloads:by_date')
+        assert result == {
+            'totalPeriods': 2,
+            'totalValue': ANY,
+            'periods': [{
+                'period': '2023-10-02',
+                'value': 10
+            }, {
+                'period': '2023-10-01',
+                'value': 5
+            }]
+        }
+
+    def test_should_not_return_more_than_per_page_items_downloads(
+        self,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.hgetall.return_value = {
+            '2023-10-01': '5',
+            '2023-10-02': '10',
+            '2023-10-03': '15'
+        }
+
+        result = page_views_and_downloads_provider.get_page_views_for_article_id_by_time_period(
+            article_id='12345',
+            by='day',
+            per_page=2,
+            page=1
+        )
+
+        assert result == {
+            'totalPeriods': 3,
+            'totalValue': ANY,
+            'periods': [{
+                'period': '2023-10-03',
+                'value': 15
+            }, {
+                'period': '2023-10-02',
+                'value': 10
+            }]
+        }
+
+    def test_should_not_return_from_selected_page_number_for_downloads(
+        self,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.hgetall.return_value = {
+            '2023-10-01': '5',
+            '2023-10-02': '10',
+            '2023-10-03': '15'
+        }
+
+        result = page_views_and_downloads_provider.get_downloads_for_article_id_by_time_period(
+            article_id='12345',
+            by='day',
+            per_page=2,
+            page=2
+        )
+
+        assert result == {
+            'totalPeriods': 3,
+            'totalValue': ANY,
+            'periods': [{
+                'period': '2023-10-01',
+                'value': 5
+            }]
+        }
+
+    def test_should_return_empty_periods_if_selected_page_does_not_exist_for_downloads(
+        self,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.hgetall.return_value = {
+            '2023-10-01': '5',
+            '2023-10-02': '10',
+            '2023-10-03': '15'
+        }
+
+        result = page_views_and_downloads_provider.get_downloads_for_article_id_by_time_period(
+            article_id='12345',
+            by='day',
+            per_page=2,
+            page=3
+        )
+
+        assert result == {
+            'totalPeriods': 3,
+            'totalValue': ANY,
+            'periods': []
+        }

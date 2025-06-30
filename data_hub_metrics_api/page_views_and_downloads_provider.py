@@ -129,11 +129,30 @@ class PageViewsAndDownloadsProvider:
             'downloads: article_id=%r, by=%r, per_page=%r, page=%r',
             article_id, by, per_page, page
         )
+        downloads_by_period: dict
+        downloads_by_period = self.redis_client.hgetall(  # type: ignore[assignment]
+            f'article:{article_id}:downloads:by_date'
+        )
+        sorted_downloads_by_period = sorted(
+            downloads_by_period.items(),
+            key=lambda item: item[0],  # Sort by date string or year month
+            reverse=True
+        )
+        page_start_index = (page - 1) * per_page
+        page_end_index = page_start_index + per_page
         total_value = self.get_download_total_for_article_id(article_id)
         return {
-            'totalPeriods': 0,
+            'totalPeriods': len(downloads_by_period),
             'totalValue': total_value,
-            'periods': []
+            'periods': [
+                {
+                    'period': period_str,
+                    'value': int(value)
+                }
+                for period_str, value in sorted_downloads_by_period[
+                    page_start_index:page_end_index
+                ]
+            ]
         }
 
     def refresh_page_view_and_download_totals(self) -> None:
