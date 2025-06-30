@@ -8,4 +8,3 @@ WHERE article_id IS NOT NULL
   AND event_name IN ('page_view', 'file_download')
   AND event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL {number_of_days} DAY)
 GROUP BY event_date, article_id
-ORDER BY article_id, event_date DESC
