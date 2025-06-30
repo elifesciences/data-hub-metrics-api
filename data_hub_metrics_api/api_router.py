@@ -91,8 +91,9 @@ def create_api_router(
         per_page: PerPageQueryType = 20,
         page: PageQueryType = 1
     ) -> MetricTimePeriodResponseTypedDict:
-        return page_views_and_downloads_provider.get_downloads_for_article_id_by_time_period(
+        return page_views_and_downloads_provider.get_metric_for_article_id_by_time_period(
             article_id=article_id,
+            metric_name='downloads',
             by=by,
             per_page=per_page,
             page=page
@@ -108,8 +109,9 @@ def create_api_router(
         per_page: PerPageQueryType = 20,
         page: PageQueryType = 1
     ) -> MetricTimePeriodResponseTypedDict:
-        return page_views_and_downloads_provider.get_page_views_for_article_id_by_time_period(
+        return page_views_and_downloads_provider.get_metric_for_article_id_by_time_period(
             article_id=article_id,
+            metric_name='page_views',
             by=by,
             per_page=per_page,
             page=page

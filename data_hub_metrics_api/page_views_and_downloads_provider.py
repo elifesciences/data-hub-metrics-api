@@ -15,10 +15,14 @@ from data_hub_metrics_api.utils.bigquery import get_bq_result_from_bq_query
 LOGGER = logging.getLogger(__name__)
 
 
+MetricNameLiteral = Literal['page_views', 'downloads']
+
+
 class BigQueryResultRow(TypedDict):
     article_id: str
     event_date: date
     page_view_count: int
+    download_count: int
 
 
 def get_query_with_replaced_number_of_days(
@@ -47,52 +51,47 @@ class PageViewsAndDownloadsProvider:
             get_sql_path('page_view_and_download_totals_query.sql')
         ).read_text(encoding='utf-8')
 
-        self.page_views_query = (
-            Path(get_sql_path('page_views_query.sql')).read_text(encoding='utf-8')
+        self.page_views_and_downloads_daily_query = (
+            Path(get_sql_path('page_views_and_downloads_daily_query.sql'))
+            .read_text(encoding='utf-8')
         )
-        self.page_views_monthly_query = (
-            Path(get_sql_path('page_views_monthly_query.sql')).read_text(encoding='utf-8')
+        self.page_views_and_downloads_monthly_query = (
+            Path(get_sql_path('page_views_and_downloads_monthly_query.sql'))
+            .read_text(encoding='utf-8')
         )
 
-    def get_page_view_total_for_article_id(
+    def get_metric_total_for_article_id(
         self,
-        article_id: str
+        article_id: str,
+        metric_name: MetricNameLiteral
     ) -> int:
         LOGGER.debug('page-views: article_id=%r', article_id)
         redis_value: Optional[str] = self.redis_client.get(  # type: ignore[assignment]
-            f'article:{article_id}:page_views'
+            f'article:{article_id}:{metric_name}'
         )
         return int(redis_value or 0)
 
-    def get_download_total_for_article_id(
-        self,
-        article_id: str
-    ) -> int:
-        LOGGER.debug('downloads: article_id=%r', article_id)
-        redis_value: Optional[str] = self.redis_client.get(  # type: ignore[assignment]
-            f'article:{article_id}:downloads'
-        )
-        return int(redis_value or 0)
-
-    def get_page_views_for_article_id_by_time_period(
+    def get_metric_for_article_id_by_time_period(
         self,
         article_id: str,
+        *,
+        metric_name: MetricNameLiteral,
         by: Literal['day', 'month'],
         per_page: int,
         page: int
     ) -> MetricTimePeriodResponseTypedDict:
         LOGGER.info(
-            'page-views: article_id=%r, by=%r, per_page=%r, page=%r',
-            article_id, by, per_page, page
+            'metric: article_id=%r, metric=%r, r, by=%r, per_page=%r, page=%r',
+            metric_name, article_id, by, per_page, page
         )
         page_views_by_period: dict
         if by == 'month':
             page_views_by_period = self.redis_client.hgetall(  # type: ignore[assignment]
-                f'article:{article_id}:page_views:by_month'
+                f'article:{article_id}:{metric_name}:by_month'
             )
         else:
             page_views_by_period = self.redis_client.hgetall(  # type: ignore[assignment]
-                f'article:{article_id}:page_views:by_date'
+                f'article:{article_id}:{metric_name}:by_date'
             )
         sorted_page_views_by_period = sorted(
             page_views_by_period.items(),
@@ -101,7 +100,10 @@ class PageViewsAndDownloadsProvider:
         )
         page_start_index = (page - 1) * per_page
         page_end_index = page_start_index + per_page
-        total_value = self.get_page_view_total_for_article_id(article_id)
+        total_value = self.get_metric_total_for_article_id(
+            article_id,
+            metric_name=metric_name
+        )
         return {
             'totalPeriods': len(page_views_by_period),
             'totalValue': total_value,
@@ -114,24 +116,6 @@ class PageViewsAndDownloadsProvider:
                     page_start_index:page_end_index
                 ]
             ]
-        }
-
-    def get_downloads_for_article_id_by_time_period(
-        self,
-        article_id: str,
-        by: Literal['day', 'month'],
-        per_page: int,
-        page: int
-    ) -> MetricTimePeriodResponseTypedDict:
-        LOGGER.info(
-            'downloads: article_id=%r, by=%r, per_page=%r, page=%r',
-            article_id, by, per_page, page
-        )
-        total_value = self.get_download_total_for_article_id(article_id)
-        return {
-            'totalPeriods': 0,
-            'totalValue': total_value,
-            'periods': []
         }
 
     def refresh_page_view_and_download_totals(self) -> None:
@@ -154,15 +138,15 @@ class PageViewsAndDownloadsProvider:
             )
         LOGGER.info('Done: Refreshing page view and download totals data from BigQuery')
 
-    def refresh_data(
+    def refresh_page_views_and_downloads_daily(
         self,
         number_of_days: int
     ) -> None:
-        LOGGER.info('Refreshing page views data from BigQuery...')
+        LOGGER.info('Refreshing page views and downloads daily from BigQuery...')
         bq_result = get_bq_result_from_bq_query(
             project_name=self.gcp_project_name,
             query=get_query_with_replaced_number_of_days(
-                self.page_views_query,
+                self.page_views_and_downloads_daily_query,
                 number_of_days=number_of_days
             )
         )
@@ -175,17 +159,22 @@ class PageViewsAndDownloadsProvider:
                 row['event_date'].isoformat(),
                 row['page_view_count']  # type: ignore[arg-type]
             )
-        LOGGER.info('Done: Refreshing page views data from BigQuery')
+            self.redis_client.hset(
+                f'article:{row['article_id']}:downloads:by_date',
+                row['event_date'].isoformat(),
+                row['download_count']  # type: ignore[arg-type]
+            )
+        LOGGER.info('Done: Refreshing page views and dosnloads daily from BigQuery')
 
-    def refresh_page_views_monthly(
+    def refresh_page_views_and_downloads_monthly(
         self,
         number_of_months: int
     ) -> None:
-        LOGGER.info('Refreshing monthly page views data from BigQuery...')
+        LOGGER.info('Refreshing monthly page views and downloads from BigQuery...')
         bq_result = get_bq_result_from_bq_query(
             project_name=self.gcp_project_name,
             query=get_query_with_replaced_number_of_months(
-                self.page_views_monthly_query,
+                self.page_views_and_downloads_monthly_query,
                 number_of_months=number_of_months
             )
         )
@@ -198,4 +187,9 @@ class PageViewsAndDownloadsProvider:
                 row['year_month'],
                 row['page_view_count']  # type: ignore[arg-type]
             )
-        LOGGER.info('Done: Refreshing monthly page views data from BigQuery')
+            self.redis_client.hset(
+                f'article:{row['article_id']}:downloads:by_month',
+                row['year_month'],
+                row['download_count']  # type: ignore[arg-type]
+            )
+        LOGGER.info('Done: Refreshing monthly page views and downloads from BigQuery')

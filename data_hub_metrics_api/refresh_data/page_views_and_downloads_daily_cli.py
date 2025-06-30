@@ -10,7 +10,7 @@ LOGGER = logging.getLogger(__name__)
 
 def parse_args(vargs: Optional[Sequence[str]]) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument('--number-of-months', type=int)
+    parser.add_argument('--number-of-days', type=int)
     return parser.parse_args(vargs)
 
 
@@ -18,8 +18,8 @@ def main(vargs: Optional[Sequence[str]] = None):
     args = parse_args(vargs)
     redis_client = get_redis_client()
     page_views_and_downloads_provider = PageViewsAndDownloadsProvider(redis_client)
-    page_views_and_downloads_provider.refresh_page_views_monthly(
-        number_of_months=args.number_of_months
+    page_views_and_downloads_provider.refresh_page_views_and_downloads_daily(
+        number_of_days=args.number_of_days
     )
 
 
