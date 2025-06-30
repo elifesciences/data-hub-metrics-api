@@ -47,8 +47,9 @@ class PageViewsAndDownloadsProvider:
             get_sql_path('page_view_and_download_totals_query.sql')
         ).read_text(encoding='utf-8')
 
-        self.page_views_query = (
-            Path(get_sql_path('page_views_query.sql')).read_text(encoding='utf-8')
+        self.page_views_and_downloads_daily_query = (
+            Path(get_sql_path('page_views_and_downloads_daily_query.sql'))
+            .read_text(encoding='utf-8')
         )
         self.page_views_monthly_query = (
             Path(get_sql_path('page_views_monthly_query.sql')).read_text(encoding='utf-8')
@@ -162,7 +163,7 @@ class PageViewsAndDownloadsProvider:
         bq_result = get_bq_result_from_bq_query(
             project_name=self.gcp_project_name,
             query=get_query_with_replaced_number_of_days(
-                self.page_views_query,
+                self.page_views_and_downloads_daily_query,
                 number_of_days=number_of_days
             )
         )

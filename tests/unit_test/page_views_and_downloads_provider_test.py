@@ -249,7 +249,7 @@ class TestPageViewsAndDownloadsProvider:
         get_bq_result_from_bq_query_mock.assert_called_with(
             project_name=page_views_and_downloads_provider.gcp_project_name,
             query=get_query_with_replaced_number_of_days(
-                page_views_and_downloads_provider.page_views_query,
+                page_views_and_downloads_provider.page_views_and_downloads_daily_query,
                 number_of_days=123
             )
         )
