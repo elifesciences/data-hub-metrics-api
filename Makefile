@@ -70,8 +70,8 @@ dev-refresh-page-views-and-downloads-daily:
 	$(PYTHON) -m data_hub_metrics_api.refresh_data.page_views_and_downloads_daily_cli \
 		--number-of-days=$(NUMBER_OF_DAYS)
 
-dev-refresh-page-views-monthy:
-	$(PYTHON) -m data_hub_metrics_api.refresh_data.page_views_monthly_cli \
+dev-refresh-page-views-and-downloads-monthy:
+	$(PYTHON) -m data_hub_metrics_api.refresh_data.page_views_and_downloads_monthly_cli \
 		--number-of-months=$(NUMBER_OF_MONTHS)
 
 dev-refresh-page-view-and-download-totals:
