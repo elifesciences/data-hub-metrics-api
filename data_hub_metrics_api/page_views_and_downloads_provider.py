@@ -56,45 +56,38 @@ class PageViewsAndDownloadsProvider:
             Path(get_sql_path('page_views_monthly_query.sql')).read_text(encoding='utf-8')
         )
 
-    def get_page_view_total_for_article_id(
+    def get_metric_total_for_article_id(
         self,
-        article_id: str
+        article_id: str,
+        metric_name: Literal['page_views', 'downloads']
     ) -> int:
         LOGGER.debug('page-views: article_id=%r', article_id)
         redis_value: Optional[str] = self.redis_client.get(  # type: ignore[assignment]
-            f'article:{article_id}:page_views'
+            f'article:{article_id}:{metric_name}'
         )
         return int(redis_value or 0)
 
-    def get_download_total_for_article_id(
-        self,
-        article_id: str
-    ) -> int:
-        LOGGER.debug('downloads: article_id=%r', article_id)
-        redis_value: Optional[str] = self.redis_client.get(  # type: ignore[assignment]
-            f'article:{article_id}:downloads'
-        )
-        return int(redis_value or 0)
-
-    def get_page_views_for_article_id_by_time_period(
+    def get_metric_for_article_id_by_time_period(
         self,
         article_id: str,
+        *,
+        metric_name: Literal['page_views', 'downloads'],
         by: Literal['day', 'month'],
         per_page: int,
         page: int
     ) -> MetricTimePeriodResponseTypedDict:
         LOGGER.info(
-            'page-views: article_id=%r, by=%r, per_page=%r, page=%r',
-            article_id, by, per_page, page
+            'metric: article_id=%r, metric=%r, r, by=%r, per_page=%r, page=%r',
+            metric_name, article_id, by, per_page, page
         )
         page_views_by_period: dict
         if by == 'month':
             page_views_by_period = self.redis_client.hgetall(  # type: ignore[assignment]
-                f'article:{article_id}:page_views:by_month'
+                f'article:{article_id}:{metric_name}:by_month'
             )
         else:
             page_views_by_period = self.redis_client.hgetall(  # type: ignore[assignment]
-                f'article:{article_id}:page_views:by_date'
+                f'article:{article_id}:{metric_name}:by_date'
             )
         sorted_page_views_by_period = sorted(
             page_views_by_period.items(),
@@ -103,7 +96,10 @@ class PageViewsAndDownloadsProvider:
         )
         page_start_index = (page - 1) * per_page
         page_end_index = page_start_index + per_page
-        total_value = self.get_page_view_total_for_article_id(article_id)
+        total_value = self.get_metric_total_for_article_id(
+            article_id,
+            metric_name=metric_name
+        )
         return {
             'totalPeriods': len(page_views_by_period),
             'totalValue': total_value,
@@ -118,6 +114,21 @@ class PageViewsAndDownloadsProvider:
             ]
         }
 
+    def get_page_views_for_article_id_by_time_period(
+        self,
+        article_id: str,
+        by: Literal['day', 'month'],
+        per_page: int,
+        page: int
+    ) -> MetricTimePeriodResponseTypedDict:
+        return self.get_metric_for_article_id_by_time_period(
+            article_id=article_id,
+            metric_name='page_views',
+            by=by,
+            per_page=per_page,
+            page=page
+        )
+
     def get_downloads_for_article_id_by_time_period(
         self,
         article_id: str,
@@ -125,35 +136,13 @@ class PageViewsAndDownloadsProvider:
         per_page: int,
         page: int
     ) -> MetricTimePeriodResponseTypedDict:
-        LOGGER.info(
-            'downloads: article_id=%r, by=%r, per_page=%r, page=%r',
-            article_id, by, per_page, page
+        return self.get_metric_for_article_id_by_time_period(
+            article_id=article_id,
+            metric_name='downloads',
+            by=by,
+            per_page=per_page,
+            page=page
         )
-        downloads_by_period: dict
-        downloads_by_period = self.redis_client.hgetall(  # type: ignore[assignment]
-            f'article:{article_id}:downloads:by_date'
-        )
-        sorted_downloads_by_period = sorted(
-            downloads_by_period.items(),
-            key=lambda item: item[0],  # Sort by date string or year month
-            reverse=True
-        )
-        page_start_index = (page - 1) * per_page
-        page_end_index = page_start_index + per_page
-        total_value = self.get_download_total_for_article_id(article_id)
-        return {
-            'totalPeriods': len(downloads_by_period),
-            'totalValue': total_value,
-            'periods': [
-                {
-                    'period': period_str,
-                    'value': int(value)
-                }
-                for period_str, value in sorted_downloads_by_period[
-                    page_start_index:page_end_index
-                ]
-            ]
-        }
 
     def refresh_page_view_and_download_totals(self) -> None:
         LOGGER.info('Refreshing page view and download totals data from BigQuery...')

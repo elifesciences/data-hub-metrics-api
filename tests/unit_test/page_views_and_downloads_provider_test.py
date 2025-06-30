@@ -59,26 +59,156 @@ class TestGetQueryWithReplacedNumberOfMonths:
 
 
 class TestPageViewsAndDownloadsProvider:
-    def test_should_return_zero_for_total_page_views_if_no_page_views(
+    def test_should_return_zero_for_total_metric_value_if_no_metric_value(
         self,
         page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         redis_client_mock.get.return_value = None
-        assert page_views_and_downloads_provider.get_page_view_total_for_article_id(
-            article_id='12345'
+        assert page_views_and_downloads_provider.get_metric_total_for_article_id(
+            article_id='12345',
+            metric_name='page_views'
         ) == 0
 
-    def test_should_return_total_page_views_from_redis(
+    def test_should_return_total_metric_value_from_redis(
         self,
         page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
         redis_client_mock: MagicMock
     ):
         redis_client_mock.get.return_value = '123'
-        assert page_views_and_downloads_provider.get_page_view_total_for_article_id(
-            article_id='12345'
+        assert page_views_and_downloads_provider.get_metric_total_for_article_id(
+            article_id='12345',
+            metric_name='page_views'
         ) == 123
         redis_client_mock.get.assert_called_with('article:12345:page_views')
+
+    def test_should_return_total_metric_value_as_total_value(
+        self,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.get.return_value = '123'
+        result = page_views_and_downloads_provider.get_metric_for_article_id_by_time_period(
+            article_id='12345',
+            metric_name='page_views',
+            by='day',
+            per_page=10,
+            page=1
+        )
+        assert result['totalValue'] == 123
+
+    def test_should_read_metric_periods_from_redis(
+        self,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.hgetall.return_value = {
+            '2023-10-01': '5',
+            '2023-10-02': '10'
+        }
+        result = page_views_and_downloads_provider.get_metric_for_article_id_by_time_period(
+            article_id='12345',
+            metric_name='page_views',
+            by='day',
+            per_page=10,
+            page=1
+        )
+        redis_client_mock.hgetall.assert_called_once_with('article:12345:page_views:by_date')
+        assert result == {
+            'totalPeriods': 2,
+            'totalValue': ANY,
+            'periods': [{
+                'period': '2023-10-02',
+                'value': 10
+            }, {
+                'period': '2023-10-01',
+                'value': 5
+            }]
+        }
+
+    def test_should_not_return_metric_periods_more_than_per_page_items(
+        self,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.hgetall.return_value = {
+            '2023-10-01': '5',
+            '2023-10-02': '10',
+            '2023-10-03': '15'
+        }
+
+        result = page_views_and_downloads_provider.get_metric_for_article_id_by_time_period(
+            article_id='12345',
+            metric_name='page_views',
+            by='day',
+            per_page=2,
+            page=1
+        )
+
+        assert result == {
+            'totalPeriods': 3,
+            'totalValue': ANY,
+            'periods': [{
+                'period': '2023-10-03',
+                'value': 15
+            }, {
+                'period': '2023-10-02',
+                'value': 10
+            }]
+        }
+
+    def test_should_return_metric_periods_from_selected_page_number(
+        self,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.hgetall.return_value = {
+            '2023-10-01': '5',
+            '2023-10-02': '10',
+            '2023-10-03': '15'
+        }
+
+        result = page_views_and_downloads_provider.get_metric_for_article_id_by_time_period(
+            article_id='12345',
+            metric_name='page_views',
+            by='day',
+            per_page=2,
+            page=2
+        )
+
+        assert result == {
+            'totalPeriods': 3,
+            'totalValue': ANY,
+            'periods': [{
+                'period': '2023-10-01',
+                'value': 5
+            }]
+        }
+
+    def test_should_return_empty_metric_periods_if_selected_page_does_not_exist(
+        self,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.hgetall.return_value = {
+            '2023-10-01': '5',
+            '2023-10-02': '10',
+            '2023-10-03': '15'
+        }
+
+        result = page_views_and_downloads_provider.get_metric_for_article_id_by_time_period(
+            article_id='12345',
+            metric_name='page_views',
+            by='day',
+            per_page=2,
+            page=3
+        )
+
+        assert result == {
+            'totalPeriods': 3,
+            'totalValue': ANY,
+            'periods': []
+        }
 
     def test_should_return_total_page_views_as_total_value(
         self,
@@ -345,27 +475,6 @@ class TestPageViewsAndDownloadsProvider:
             '2023-10',
             5
         )
-
-    def test_should_return_zero_for_total_downloads_if_no_downloads(
-        self,
-        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
-        redis_client_mock: MagicMock
-    ):
-        redis_client_mock.get.return_value = None
-        assert page_views_and_downloads_provider.get_download_total_for_article_id(
-            article_id='12345'
-        ) == 0
-
-    def test_should_return_total_downloads_from_redis(
-        self,
-        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
-        redis_client_mock: MagicMock
-    ):
-        redis_client_mock.get.return_value = '12'
-        assert page_views_and_downloads_provider.get_download_total_for_article_id(
-            article_id='12345'
-        ) == 12
-        redis_client_mock.get.assert_called_with('article:12345:downloads')
 
     def test_should_return_total_downloads_as_total_value(
         self,
