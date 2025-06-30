@@ -18,7 +18,7 @@ def main(vargs: Optional[Sequence[str]] = None):
     args = parse_args(vargs)
     redis_client = get_redis_client()
     page_views_and_downloads_provider = PageViewsAndDownloadsProvider(redis_client)
-    page_views_and_downloads_provider.refresh_page_views_monthly(
+    page_views_and_downloads_provider.refresh_page_views_and_downloads_monthly(
         number_of_months=args.number_of_months
     )
 

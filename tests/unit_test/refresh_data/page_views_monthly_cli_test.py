@@ -33,6 +33,8 @@ class TestMain:
         page_views_and_downloads_provider_mock: MagicMock,
     ):
         main(['--number-of-months=12'])
-        page_views_and_downloads_provider_mock.refresh_page_views_monthly.assert_called_with(
-            number_of_months=12
+        (
+            page_views_and_downloads_provider_mock
+            .refresh_page_views_and_downloads_monthly
+            .assert_called_with(number_of_months=12)
         )

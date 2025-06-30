@@ -166,11 +166,11 @@ class PageViewsAndDownloadsProvider:
             )
         LOGGER.info('Done: Refreshing page views and dosnloads daily from BigQuery')
 
-    def refresh_page_views_monthly(
+    def refresh_page_views_and_downloads_monthly(
         self,
         number_of_months: int
     ) -> None:
-        LOGGER.info('Refreshing monthly page views data from BigQuery...')
+        LOGGER.info('Refreshing monthly page views and downloads from BigQuery...')
         bq_result = get_bq_result_from_bq_query(
             project_name=self.gcp_project_name,
             query=get_query_with_replaced_number_of_months(
@@ -187,4 +187,4 @@ class PageViewsAndDownloadsProvider:
                 row['year_month'],
                 row['page_view_count']  # type: ignore[arg-type]
             )
-        LOGGER.info('Done: Refreshing monthly page views data from BigQuery')
+        LOGGER.info('Done: Refreshing monthly page views and downloads from BigQuery')

@@ -285,7 +285,7 @@ class TestPageViewsAndDownloadsProvider:
         mock_bq_result = MagicMock()
         mock_bq_result.total_rows = 0
         get_bq_result_from_bq_query_mock.return_value = mock_bq_result
-        page_views_and_downloads_provider.refresh_page_views_monthly(number_of_months=12)
+        page_views_and_downloads_provider.refresh_page_views_and_downloads_monthly(number_of_months=12)
         get_bq_result_from_bq_query_mock.assert_called_with(
             project_name=page_views_and_downloads_provider.gcp_project_name,
             query=get_query_with_replaced_number_of_months(
@@ -308,7 +308,7 @@ class TestPageViewsAndDownloadsProvider:
             'page_view_count': 5
         }])
         get_bq_result_from_bq_query_mock.return_value = mock_bq_result
-        page_views_and_downloads_provider.refresh_page_views_monthly(number_of_months=3)
+        page_views_and_downloads_provider.refresh_page_views_and_downloads_monthly(number_of_months=3)
         redis_client_mock.hset.assert_called_once_with(
             'article:12345:page_views:by_month',
             '2023-10',
