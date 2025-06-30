@@ -19,6 +19,7 @@ class BigQueryResultRow(TypedDict):
     article_id: str
     event_date: date
     page_view_count: int
+    download_count: int
 
 
 def get_query_with_replaced_number_of_days(
@@ -175,6 +176,11 @@ class PageViewsAndDownloadsProvider:
                 f'article:{row['article_id']}:page_views:by_date',
                 row['event_date'].isoformat(),
                 row['page_view_count']  # type: ignore[arg-type]
+            )
+            self.redis_client.hset(
+                f'article:{row['article_id']}:downloads:by_date',
+                row['event_date'].isoformat(),
+                row['download_count']  # type: ignore[arg-type]
             )
         LOGGER.info('Done: Refreshing page views data from BigQuery')
 
