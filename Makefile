@@ -66,8 +66,8 @@ dev-start:
 dev-refresh-citations:
 	$(PYTHON) -m data_hub_metrics_api.refresh_data.citations_cli
 
-dev-refresh-page-views:
-	$(PYTHON) -m data_hub_metrics_api.refresh_data.page_views_cli \
+dev-refresh-page-views-and-downloads-daily:
+	$(PYTHON) -m data_hub_metrics_api.refresh_data.page_views_and_downloads_daily_cli \
 		--number-of-days=$(NUMBER_OF_DAYS)
 
 dev-refresh-page-views-monthy:
