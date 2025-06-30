@@ -128,11 +128,22 @@ class TestProvideCitations:
     ):
         (
             page_views_and_downloads_provider_mock
-            .get_downloads_for_article_id_by_time_period
+            .get_metric_for_article_id_by_time_period
             .return_value
         ) = METRIC_TIME_PERIOD_RESPONSE_DICT_1
         response = test_client.get('/metrics/article/85111/downloads')
         response.raise_for_status()
+        (
+            page_views_and_downloads_provider_mock
+            .get_metric_for_article_id_by_time_period
+            .assert_called_once_with(
+                article_id='85111',
+                metric_name='downloads',
+                by='day',
+                per_page=20,
+                page=1
+            )
+        )
         actual_response_json = response.json()
         assert actual_response_json == METRIC_TIME_PERIOD_RESPONSE_DICT_1
 
@@ -143,10 +154,21 @@ class TestProvideCitations:
     ):
         (
             page_views_and_downloads_provider_mock
-            .get_page_views_for_article_id_by_time_period
+            .get_metric_for_article_id_by_time_period
             .return_value
         ) = METRIC_TIME_PERIOD_RESPONSE_DICT_1
         response = test_client.get('/metrics/article/85111/page-views')
         response.raise_for_status()
+        (
+            page_views_and_downloads_provider_mock
+            .get_metric_for_article_id_by_time_period
+            .assert_called_once_with(
+                article_id='85111',
+                metric_name='page_views',
+                by='day',
+                per_page=20,
+                page=1
+            )
+        )
         actual_response_json = response.json()
         assert actual_response_json == METRIC_TIME_PERIOD_RESPONSE_DICT_1
