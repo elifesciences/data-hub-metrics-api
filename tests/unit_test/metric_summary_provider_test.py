@@ -53,10 +53,12 @@ class TestMetricSummaryProvider:
         metric_summary_provider: MetricSummaryProvider,
         page_views_and_downloads_provider_mock: MagicMock
     ):
-        page_views_and_downloads_provider_mock.get_metric_total_for_article_id.side_effect = [
-            123,  # page_views
-            12    # downloads
-        ]
+        page_views_and_downloads_provider_mock.get_metric_total_for_article_id.side_effect = (
+            lambda article_id, metric_name: (
+                123 if metric_name == 'page_views'
+                else 12
+            )
+        )
         summary_dict = metric_summary_provider.get_summary_for_article_id(
             article_id='12345'
         )
