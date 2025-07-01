@@ -47,10 +47,15 @@ def create_app():
 
     redis_client = get_redis_client()
 
+    citations_provider_list = get_citations_provider_list(redis_client)
+    page_views_and_downloads_provider = PageViewsAndDownloadsProvider(redis_client)
+
     app.include_router(create_api_router(
-        citations_provider_list=get_citations_provider_list(redis_client),
-        page_views_and_downloads_provider=PageViewsAndDownloadsProvider(redis_client),
-        metric_summary_provider=MetricSummaryProvider()
+        citations_provider_list=citations_provider_list,
+        page_views_and_downloads_provider=page_views_and_downloads_provider,
+        metric_summary_provider=MetricSummaryProvider(
+            page_views_and_downloads_provider=page_views_and_downloads_provider
+        )
     ))
 
     app.mount('/', StaticFiles(directory='static', html=True), name='static')
