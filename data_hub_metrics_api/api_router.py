@@ -11,6 +11,7 @@ from data_hub_metrics_api.api_router_typing import (
 )
 from data_hub_metrics_api.citations_provider import CitationsProvider
 from data_hub_metrics_api.page_views_and_downloads_provider import PageViewsAndDownloadsProvider
+from data_hub_metrics_api.metric_summary_provider import MetricSummaryProvider
 
 
 LOGGER = logging.getLogger(__name__)
@@ -49,7 +50,8 @@ class MetricTimePeriodJsonResponse(JSONResponse):
 
 def create_api_router(
     citations_provider_list: Sequence[CitationsProvider],
-    page_views_and_downloads_provider: PageViewsAndDownloadsProvider
+    page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
+    metric_summary_provider: MetricSummaryProvider
 ) -> APIRouter:
     assert page_views_and_downloads_provider is not None
     router = APIRouter()
@@ -140,17 +142,9 @@ def create_api_router(
         article_id: str
     ) -> MetricSummaryResponseTypedDict:
         LOGGER.info('summary: article_id=%r', article_id)
-        return {
-            "total": 1,
-            "items": [{
-                "id": int(article_id),
-                "views": 0,
-                "downloads": 0,
-                "crossref": 0,
-                "pubmed": 0,
-                "scopus": 0
-            }]
-        }
+        return metric_summary_provider.get_summary_for_article_id(
+            article_id=article_id
+        )
 
     @router.get(
         '/metrics/{content_type}/{content_id}/page-views',
