@@ -1,7 +1,7 @@
 SELECT
   COALESCE(ga4.article_id, ua.article_id) AS article_id,
   COALESCE(ga4.page_view_count, 0) + COALESCE(ua.total_ua_views, 0) AS page_view_count,
-  COALESCE(ua.total_ua_downloads, 0) AS download_count
+  COALESCE(ga4.download_count, 0) + COALESCE(ua.total_ua_downloads, 0) AS download_count
 FROM (
   SELECT 
     article_id,
