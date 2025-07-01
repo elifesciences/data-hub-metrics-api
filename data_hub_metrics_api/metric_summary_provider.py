@@ -26,7 +26,10 @@ class MetricSummaryProvider:
                     article_id=article_id,
                     metric_name='page_views'
                 ),
-                "downloads": 0,
+                "downloads": self.page_views_and_downloads_provider.get_metric_total_for_article_id(
+                    article_id=article_id,
+                    metric_name='downloads'
+                ),
                 "crossref": 0,
                 "pubmed": 0,
                 "scopus": 0
