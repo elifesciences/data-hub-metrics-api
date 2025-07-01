@@ -49,12 +49,17 @@ def create_app():
 
     citations_provider_list = get_citations_provider_list(redis_client)
     page_views_and_downloads_provider = PageViewsAndDownloadsProvider(redis_client)
+    crossref_citations_provider = CrossrefCitationsProvider(
+        name="Crossref",
+        redis_client=redis_client
+    )
 
     app.include_router(create_api_router(
         citations_provider_list=citations_provider_list,
         page_views_and_downloads_provider=page_views_and_downloads_provider,
         metric_summary_provider=MetricSummaryProvider(
-            page_views_and_downloads_provider=page_views_and_downloads_provider
+            page_views_and_downloads_provider=page_views_and_downloads_provider,
+            crossref_citations_provider=crossref_citations_provider
         )
     ))
 

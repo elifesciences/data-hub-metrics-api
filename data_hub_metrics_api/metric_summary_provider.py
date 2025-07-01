@@ -2,6 +2,7 @@
 from data_hub_metrics_api.api_router_typing import (
     MetricSummaryResponseTypedDict
 )
+from data_hub_metrics_api.crossref_citations_provider import CrossrefCitationsProvider
 from data_hub_metrics_api.page_views_and_downloads_provider import (
     PageViewsAndDownloadsProvider
 )
@@ -10,9 +11,11 @@ from data_hub_metrics_api.page_views_and_downloads_provider import (
 class MetricSummaryProvider:
     def __init__(
         self,
-        page_views_and_downloads_provider: PageViewsAndDownloadsProvider
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
+        crossref_citations_provider: CrossrefCitationsProvider
     ):
         self.page_views_and_downloads_provider = page_views_and_downloads_provider
+        self.crossref_citations_provider = crossref_citations_provider
 
     def get_summary_for_article_id(
         self,
@@ -30,7 +33,13 @@ class MetricSummaryProvider:
                     article_id=article_id,
                     metric_name='downloads'
                 ),
-                "crossref": 0,
+                "crossref": (
+                    self
+                    .crossref_citations_provider
+                    .get_combined_citations_source_metric_for_article_id(
+                        article_id=article_id
+                    )['citations']
+                ),
                 "pubmed": 0,
                 "scopus": 0
             }]
