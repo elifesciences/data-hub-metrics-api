@@ -10,6 +10,7 @@ from data_hub_metrics_api.api_router import create_api_router
 from data_hub_metrics_api.citations_provider import CitationsProvider, DummyCitationsProvider
 from data_hub_metrics_api.crossref_citations_provider import CrossrefCitationsProvider
 from data_hub_metrics_api.page_views_and_downloads_provider import PageViewsAndDownloadsProvider
+from data_hub_metrics_api.metric_summary_provider import MetricSummaryProvider
 
 
 LOGGER = logging.getLogger(__name__)
@@ -48,7 +49,8 @@ def create_app():
 
     app.include_router(create_api_router(
         citations_provider_list=get_citations_provider_list(redis_client),
-        page_views_and_downloads_provider=PageViewsAndDownloadsProvider(redis_client)
+        page_views_and_downloads_provider=PageViewsAndDownloadsProvider(redis_client),
+        metric_summary_provider=MetricSummaryProvider()
     ))
 
     app.mount('/', StaticFiles(directory='static', html=True), name='static')
