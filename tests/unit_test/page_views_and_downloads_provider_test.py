@@ -31,6 +31,11 @@ def _redis_client_hset_mock(redis_client_mock: MagicMock) -> MagicMock:
     return redis_client_mock.hset
 
 
+@pytest.fixture(name='redis_client_scan_iter_mock')
+def _redis_client_scan_iter_mock(redis_client_mock: MagicMock) -> MagicMock:
+    return redis_client_mock.scan_iter
+
+
 @pytest.fixture(name='page_views_and_downloads_provider')
 def _page_views_and_downloads_provider(
     redis_client_mock: MagicMock
@@ -64,6 +69,35 @@ class TestGetQueryWithReplacedNumberOfMonths:
 
 
 class TestPageViewsAndDownloadsProvider:
+    def test_should_return_empty_article_ids_if_redis_is_empty(
+        self,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
+        redis_client_scan_iter_mock: MagicMock
+    ):
+        redis_client_scan_iter_mock.return_value = iter([])
+        assert page_views_and_downloads_provider.get_article_ids(
+            per_page=10,
+            page=1
+        ) == []
+
+    def test_should_return_all_article_ids_if_less_than_a_page(
+        self,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
+        redis_client_scan_iter_mock: MagicMock
+    ):
+        redis_client_scan_iter_mock.return_value = iter([
+            b'article:10001:page_views',
+            b'article:10002:page_views',
+            b'article:10003:page_views',
+        ])
+        assert page_views_and_downloads_provider.get_article_ids(
+            per_page=10,
+            page=1
+        ) == ['10001', '10002', '10003']
+        redis_client_scan_iter_mock.assert_called_once_with(
+            match='article:*:page_views'
+        )
+
     def test_should_return_zero_for_total_metric_value_if_no_metric_value(
         self,
         page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
