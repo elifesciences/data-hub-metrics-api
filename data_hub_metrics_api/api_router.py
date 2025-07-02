@@ -124,18 +124,10 @@ def create_api_router(
         per_page: PerPageQueryType = 20,
         page: PageQueryType = 1
     ) -> MetricSummaryResponseTypedDict:
-        LOGGER.info('summary: per_page=%r, page=%r', per_page, page)
-        return {
-            "total": 1,
-            "items": [{
-                "id": 12345,
-                "views": 0,
-                "downloads": 0,
-                "crossref": 0,
-                "pubmed": 0,
-                "scopus": 0
-            }]
-        }
+        return metric_summary_provider.get_summary_for_all_articles(
+            per_page=per_page,
+            page=page
+        )
 
     @router.get('/metrics/article/{article_id}/summary')
     def provide_summary(
