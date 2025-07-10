@@ -77,7 +77,7 @@ class PageViewsAndDownloadsProvider:
         return sorted([
             get_article_id_from_page_views_total_key(key.decode('utf-8'))
             for key in self.redis_client.scan_iter(match='article:*:page_views')
-        ])
+        ])[:per_page]
 
     def get_metric_total_for_article_id(
         self,
