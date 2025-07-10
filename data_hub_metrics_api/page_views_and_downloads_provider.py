@@ -74,10 +74,12 @@ class PageViewsAndDownloadsProvider:
         page: int = 1
     ) -> Sequence[str]:
         LOGGER.info('get_article_ids: per_page=%r, page=%r', per_page, page)
+        page_start_index = (page - 1) * per_page
+        page_end_index = page_start_index + per_page
         return sorted([
             get_article_id_from_page_views_total_key(key.decode('utf-8'))
             for key in self.redis_client.scan_iter(match='article:*:page_views')
-        ])[:per_page]
+        ])[page_start_index:page_end_index]
 
     def get_metric_total_for_article_id(
         self,
