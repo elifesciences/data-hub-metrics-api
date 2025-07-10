@@ -68,9 +68,13 @@ class MetricSummaryProvider:
             per_page=per_page,
             page=page
         )
+
+        total = self.page_views_and_downloads_provider.get_total_article_count()
+        LOGGER.info('summary: total=%r', total)
         LOGGER.debug('summary: article_ids=%r', article_ids)
+
         return {
-            "total": len(article_ids),
+            "total": total,
             "items": [
                 self.get_summary_item_for_article_id(article_id)
                 for article_id in article_ids

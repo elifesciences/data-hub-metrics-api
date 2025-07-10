@@ -68,6 +68,9 @@ class PageViewsAndDownloadsProvider:
             .read_text(encoding='utf-8')
         )
 
+    def get_total_article_count(self) -> int:
+        return sum(1 for _ in self.redis_client.scan_iter(match='article:*:page_views'))
+
     def get_article_ids(
         self,
         per_page: int = 20,

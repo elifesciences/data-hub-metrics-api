@@ -128,13 +128,11 @@ class TestMetricSummaryProviderByAllArticles:
         metric_summary_provider: MetricSummaryProvider,
         page_views_and_downloads_provider_mock: MagicMock
     ):
-        (
-            page_views_and_downloads_provider_mock
-            .get_article_ids
-            .return_value
-        ) = ['10001', '10002', '10003']
+        page_views_and_downloads_provider_mock.get_article_ids.return_value = ['10001', '10002']
+        page_views_and_downloads_provider_mock.get_total_article_count.return_value = 3
         summary_dict = metric_summary_provider.get_summary_for_all_articles(
-            per_page=10,
+            per_page=2,
             page=1
         )
         assert summary_dict['total'] == 3
+        assert len(summary_dict['items']) == 2
