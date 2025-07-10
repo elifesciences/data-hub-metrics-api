@@ -70,7 +70,7 @@ class MetricSummaryProvider:
         )
         LOGGER.debug('summary: article_ids=%r', article_ids)
         return {
-            "total": 1,
+            "total": len(article_ids),
             "items": [
                 self.get_summary_item_for_article_id(article_id)
                 for article_id in article_ids

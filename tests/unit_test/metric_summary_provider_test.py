@@ -122,3 +122,19 @@ class TestMetricSummaryProviderByAllArticles:
             .get_article_ids
             .assert_called_once_with(per_page=10, page=1)
         )
+
+    def test_should_return_count_of_articles_as_total(
+        self,
+        metric_summary_provider: MetricSummaryProvider,
+        page_views_and_downloads_provider_mock: MagicMock
+    ):
+        (
+            page_views_and_downloads_provider_mock
+            .get_article_ids
+            .return_value
+        ) = ['10001', '10002', '10003']
+        summary_dict = metric_summary_provider.get_summary_for_all_articles(
+            per_page=10,
+            page=1
+        )
+        assert summary_dict['total'] == 3
