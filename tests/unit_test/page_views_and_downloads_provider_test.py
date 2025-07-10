@@ -134,6 +134,21 @@ class TestPageViewsAndDownloadsProvider:
             match='article:*:page_views'
         )
 
+    def test_should_return_empty_article_ids_list_if_selected_page_does_not_exist(
+        self,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
+        redis_client_scan_iter_mock: MagicMock
+    ):
+        redis_client_scan_iter_mock.return_value = iter([
+            b'article:10001:page_views',
+            b'article:10002:page_views',
+            b'article:10003:page_views'
+        ])
+        assert page_views_and_downloads_provider.get_article_ids(
+            per_page=2,
+            page=3
+        ) == []
+
     def test_should_return_zero_for_total_metric_value_if_no_metric_value(
         self,
         page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
