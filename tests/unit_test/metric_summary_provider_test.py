@@ -37,7 +37,7 @@ def _metric_summary_provider(
     )
 
 
-class TestMetricSummaryProvider:
+class TestMetricSummaryProviderByArticleId:
     def test_should_return_one_item(
         self,
         metric_summary_provider: MetricSummaryProvider
@@ -95,4 +95,30 @@ class TestMetricSummaryProvider:
             crossref_citations_provider_mock
             .get_combined_citations_source_metric_for_article_id
             .assert_called_once_with(article_id='12345')
+        )
+
+
+class TestMetricSummaryProviderByAllArticles:
+    def test_should_return_paginated_summary_for_all_articles(
+        self,
+        metric_summary_provider: MetricSummaryProvider,
+        page_views_and_downloads_provider_mock: MagicMock
+    ):
+        (
+            page_views_and_downloads_provider_mock
+            .get_article_ids
+            .return_value
+        ) = ['10001', '10002']
+        summary_dict = metric_summary_provider.get_summary_for_all_articles(
+            per_page=10,
+            page=1
+        )
+        assert (
+            [summary_item['id'] for summary_item in summary_dict['items']]
+            == [10001, 10002]
+        )
+        (
+            page_views_and_downloads_provider_mock
+            .get_article_ids
+            .assert_called_once_with(per_page=10, page=1)
         )
