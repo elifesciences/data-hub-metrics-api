@@ -218,3 +218,20 @@ class TestProvideSummary:
         )
         actual_response_json = response.json()
         assert actual_response_json == METRIC_SUMMARY_RESPONSE_DICT_1
+
+    def test_should_return_summary_for_all_articles(
+        self,
+        test_client: TestClient,
+        metric_summary_provider_mock: MagicMock
+    ):
+        metric_summary_provider_mock.get_summary_for_all_articles.return_value = (
+            METRIC_SUMMARY_RESPONSE_DICT_1
+        )
+        response = test_client.get('/metrics/article/summary')
+        response.raise_for_status()
+        metric_summary_provider_mock.get_summary_for_all_articles.assert_called_once_with(
+            per_page=20,
+            page=1
+        )
+        actual_response_json = response.json()
+        assert actual_response_json == METRIC_SUMMARY_RESPONSE_DICT_1

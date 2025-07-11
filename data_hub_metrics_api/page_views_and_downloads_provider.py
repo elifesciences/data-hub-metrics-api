@@ -2,7 +2,8 @@
 from datetime import date
 import logging
 from pathlib import Path
-from typing import Literal, Optional, TypedDict
+import re
+from typing import Literal, Optional, Sequence, TypedDict
 
 from tqdm import tqdm
 from redis import Redis
@@ -39,6 +40,13 @@ def get_query_with_replaced_number_of_months(
     return query.replace(r'{number_of_months}', str(number_of_months))
 
 
+def get_article_id_from_page_views_total_key(key: str) -> str:
+    match = re.match(r'article:(\d+):page_views', key)
+    if not match:
+        raise ValueError(f'Invalid key format: {key}')
+    return match.group(1)
+
+
 class PageViewsAndDownloadsProvider:
     def __init__(
         self,
@@ -59,6 +67,22 @@ class PageViewsAndDownloadsProvider:
             Path(get_sql_path('page_views_and_downloads_monthly_query.sql'))
             .read_text(encoding='utf-8')
         )
+
+    def get_total_article_count(self) -> int:
+        return sum(1 for _ in self.redis_client.scan_iter(match='article:*:page_views'))
+
+    def get_article_ids(
+        self,
+        per_page: int = 20,
+        page: int = 1
+    ) -> Sequence[str]:
+        LOGGER.info('get_article_ids: per_page=%r, page=%r', per_page, page)
+        page_start_index = (page - 1) * per_page
+        page_end_index = page_start_index + per_page
+        return sorted([
+            get_article_id_from_page_views_total_key(key.decode('utf-8'))
+            for key in self.redis_client.scan_iter(match='article:*:page_views')
+        ])[page_start_index:page_end_index]
 
     def get_metric_total_for_article_id(
         self,
