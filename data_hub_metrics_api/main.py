@@ -64,7 +64,7 @@ def create_app():
             page_views_and_downloads_provider=page_views_and_downloads_provider,
             crossref_citations_provider=crossref_citations_provider
         ),
-        non_article_page_views_provider=NonArticlePageViewsProvider()
+        non_article_page_views_provider=NonArticlePageViewsProvider(redis_client)
     ))
 
     app.mount('/', StaticFiles(directory='static', html=True), name='static')

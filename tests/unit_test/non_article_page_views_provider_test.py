@@ -26,7 +26,7 @@ def _redis_client_set_mock(redis_client_mock: MagicMock) -> MagicMock:
 def _non_article_page_views_provider(
     redis_client_mock: MagicMock
 ) -> NonArticlePageViewsProvider:
-    return NonArticlePageViewsProvider()
+    return NonArticlePageViewsProvider(redis_client_mock)
 
 
 class TestNonArticlePageViewsProvider:
