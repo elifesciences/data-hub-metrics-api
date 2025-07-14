@@ -262,7 +262,7 @@ class TestProvidePageViewsByContentType:
             .return_value
         ) = METRIC_TIME_PERIOD_RESPONSE_DICT_1
         response = test_client.get(
-            '/metrics/blog-article/12345abc/page-views-by-content-type?by=day'
+            '/metrics/blog-article/12345abc/page-views'
         )
         response.raise_for_status()
         (

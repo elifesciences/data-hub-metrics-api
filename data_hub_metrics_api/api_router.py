@@ -136,12 +136,12 @@ def create_api_router(
         response_class=MetricTimePeriodJsonResponse
     )
     def provide_page_views_by_content_type(
-        cotent_type: ContentTypeLiteral,
+        content_type: ContentTypeLiteral,
         content_id: str,
         by: Literal['day', 'month'] = 'day'
     ) -> MetricTimePeriodResponseTypedDict:
         return non_article_page_views_provider.get_page_views_by_content_type(
-            content_type=cotent_type,
+            content_type=content_type,
             content_id=content_id,
             by=by
         )
