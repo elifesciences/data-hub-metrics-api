@@ -11,6 +11,7 @@ from data_hub_metrics_api.citations_provider import CitationsProvider, DummyCita
 from data_hub_metrics_api.crossref_citations_provider import CrossrefCitationsProvider
 from data_hub_metrics_api.page_views_and_downloads_provider import PageViewsAndDownloadsProvider
 from data_hub_metrics_api.metric_summary_provider import MetricSummaryProvider
+from data_hub_metrics_api.non_article_page_views_provider import NonArticlePageViewsProvider
 
 
 LOGGER = logging.getLogger(__name__)
@@ -62,7 +63,8 @@ def create_app():
         metric_summary_provider=MetricSummaryProvider(
             page_views_and_downloads_provider=page_views_and_downloads_provider,
             crossref_citations_provider=crossref_citations_provider
-        )
+        ),
+        non_article_page_views_provider=NonArticlePageViewsProvider(redis_client)
     ))
 
     app.mount('/', StaticFiles(directory='static', html=True), name='static')

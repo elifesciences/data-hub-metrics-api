@@ -77,6 +77,9 @@ dev-refresh-page-views-and-downloads-monthy:
 dev-refresh-page-view-and-download-totals:
 	$(PYTHON) -m data_hub_metrics_api.refresh_data.page_view_and_download_totals_cli
 
+dev-refresh-non-article-page-view-totals:
+	$(PYTHON) -m data_hub_metrics_api.refresh_data.non_article_page_view_totals_cli
+
 
 build:
 	$(DOCKER_COMPOSE) build data-hub-metrics-api
