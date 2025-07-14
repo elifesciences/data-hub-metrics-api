@@ -1,4 +1,15 @@
-from typing import Sequence, TypedDict
+from typing import Literal, Sequence, TypedDict
+
+
+ContentTypeLiteral = Literal[
+    'blog-article',
+    'labs-post',
+    'collection',
+    'digest',
+    'event',
+    'interview',
+    'press-package'
+]
 
 
 class CitationsSourceMetricTypedDict(TypedDict):

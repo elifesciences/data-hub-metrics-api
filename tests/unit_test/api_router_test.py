@@ -13,10 +13,11 @@ from data_hub_metrics_api.api_router_typing import (
 from data_hub_metrics_api.citations_provider import CitationsProvider
 from data_hub_metrics_api.page_views_and_downloads_provider import PageViewsAndDownloadsProvider
 from data_hub_metrics_api.metric_summary_provider import MetricSummaryProvider
+from data_hub_metrics_api.non_article_page_views_provider import NonArticlePageViewsProvider
 
 
 METRIC_TIME_PERIOD_RESPONSE_DICT_1: MetricTimePeriodResponseTypedDict = {
-    'totalPeriods': 1,
+    'totalPeriods': 0,
     'totalValue': 1,
     'periods': []
 }
@@ -52,16 +53,26 @@ def _metric_summary_provider_mock() -> MagicMock:
     return MagicMock(nam='metric_summary_provider_mock', spec=MetricSummaryProvider)
 
 
+@pytest.fixture(name='non_article_page_views_provider_mock')
+def _non_article_page_views_provider_mock() -> MagicMock:
+    return MagicMock(
+        name='non_article_page_views_provider_mock',
+        spec=NonArticlePageViewsProvider
+    )
+
+
 def create_test_client(
     citations_provider_list: Sequence[CitationsProvider],
     page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
-    metric_summary_provider: MetricSummaryProvider
+    metric_summary_provider: MetricSummaryProvider,
+    non_article_page_views_provider: NonArticlePageViewsProvider
 ) -> TestClient:
     app = FastAPI()
     app.include_router(create_api_router(
         citations_provider_list=citations_provider_list,
         page_views_and_downloads_provider=page_views_and_downloads_provider,
-        metric_summary_provider=metric_summary_provider
+        metric_summary_provider=metric_summary_provider,
+        non_article_page_views_provider=non_article_page_views_provider
     ))
     client = TestClient(app)
     return client
@@ -71,12 +82,14 @@ def create_test_client(
 def _test_client(
     citations_provider_mock: MagicMock,
     page_views_and_downloads_provider_mock: MagicMock,
-    metric_summary_provider_mock: MagicMock
+    metric_summary_provider_mock: MagicMock,
+    non_article_page_views_provider_mock: MagicMock
 ) -> TestClient:
     return create_test_client(
         citations_provider_list=[citations_provider_mock],
         page_views_and_downloads_provider=page_views_and_downloads_provider_mock,
-        metric_summary_provider=metric_summary_provider_mock
+        metric_summary_provider=metric_summary_provider_mock,
+        non_article_page_views_provider=non_article_page_views_provider_mock
     )
 
 
@@ -235,3 +248,31 @@ class TestProvideSummary:
         )
         actual_response_json = response.json()
         assert actual_response_json == METRIC_SUMMARY_RESPONSE_DICT_1
+
+
+class TestProvidePageViewsByContentType:
+    def test_should_return_page_views_by_content_type(
+        self,
+        test_client: TestClient,
+        non_article_page_views_provider_mock: MagicMock
+    ):
+        (
+            non_article_page_views_provider_mock
+            .get_page_views_by_content_type
+            .return_value
+        ) = METRIC_TIME_PERIOD_RESPONSE_DICT_1
+        response = test_client.get(
+            '/metrics/blog-article/12345abc/page-views-by-content-type?by=day'
+        )
+        response.raise_for_status()
+        (
+            non_article_page_views_provider_mock
+            .get_page_views_by_content_type
+            .assert_called_once_with(
+                content_type='blog-article',
+                content_id='12345abc',
+                by='day'
+            )
+        )
+        actual_response_json = response.json()
+        assert actual_response_json == METRIC_TIME_PERIOD_RESPONSE_DICT_1
