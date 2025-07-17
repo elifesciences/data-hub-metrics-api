@@ -12,6 +12,6 @@ def main():
     non_article_page_views_provider.refresh_non_article_page_view_totals()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     main()

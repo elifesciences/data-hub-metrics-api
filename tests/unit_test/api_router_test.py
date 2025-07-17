@@ -22,14 +22,14 @@ METRIC_TIME_PERIOD_RESPONSE_DICT_1: MetricTimePeriodResponseTypedDict = {
 }
 
 METRIC_SUMMARY_RESPONSE_DICT_1: MetricSummaryResponseTypedDict = {
-    "total": 1,
-    "items": [{
-        "id": 12345,
-        "views": 0,
-        "downloads": 0,
-        "crossref": 0,
-        "pubmed": 0,
-        "scopus": 0
+    'total': 1,
+    'items': [{
+        'id': 12345,
+        'views': 0,
+        'downloads': 0,
+        'crossref': 0,
+        'pubmed': 0,
+        'scopus': 0
     }]
 }
 
@@ -103,9 +103,9 @@ class TestProvideCitations:
             .get_citations_source_metric_for_article_id_and_version
             .return_value
         ) = {
-            "service": "Crossref",
-            "uri": "https://doi.org/10.7554/eLife.85111.2",
-            "citations": 7
+            'service': 'Crossref',
+            'uri': 'https://doi.org/10.7554/eLife.85111.2',
+            'citations': 7
         }
         response = test_client.get('/metrics/article/85111/citations/version/2')
         response.raise_for_status()
@@ -126,9 +126,9 @@ class TestProvideCitations:
             .get_combined_citations_source_metric_for_article_id
             .return_value
         ) = {
-            "service": "Crossref",
-            "uri": "https://doi.org/10.7554/eLife.85111",
-            "citations": 7
+            'service': 'Crossref',
+            'uri': 'https://doi.org/10.7554/eLife.85111',
+            'citations': 7
         }
         response = test_client.get('/metrics/article/85111/citations')
         response.raise_for_status()
@@ -149,9 +149,9 @@ class TestProvideCitations:
             .get_citations_source_metric_for_article_id_and_version
             .return_value
         ) = {
-            "service": "Crossref",
-            "uri": "https://doi.org/10.7554/eLife.85111.2",
-            "citations": 7
+            'service': 'Crossref',
+            'uri': 'https://doi.org/10.7554/eLife.85111.2',
+            'citations': 7
         }
         response = test_client.get('/metrics/article/85111/citations/version/2')
         response.raise_for_status()

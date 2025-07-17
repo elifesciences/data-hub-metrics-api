@@ -55,9 +55,9 @@ class NonArticlePageViewsProvider:
         total_rows = bq_result.total_rows
         LOGGER.info('Total rows from BigQuery: %d', total_rows)
 
-        for row in iter_with_progress(bq_result, total_rows, "Loading Redis"):
+        for row in iter_with_progress(bq_result, total_rows, 'Loading Redis'):
             self.redis_client.set(
-                f'non-article:{row["content_type"]}:{row["content_id"]}:page_views',
+                f'non-article:{row['content_type']}:{row['content_id']}:page_views',
                 row['page_view_count']
             )
         LOGGER.info('Done: Refreshing non-article page view totals data from BigQuery')

@@ -21,9 +21,9 @@ def mock_env() -> Iterator[dict]:
         yield env_dict
 
 
-@pytest.fixture(name="bigquery_mock", autouse=True)
+@pytest.fixture(name='bigquery_mock', autouse=True)
 def _bigquery_mock() -> Iterator[MagicMock]:
-    with patch.object(bigquery_module, "bigquery") as mock:
+    with patch.object(bigquery_module, 'bigquery') as mock:
         yield mock
 
 

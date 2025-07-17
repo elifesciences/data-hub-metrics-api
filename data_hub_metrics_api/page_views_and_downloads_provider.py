@@ -147,7 +147,7 @@ class PageViewsAndDownloadsProvider:
         total_rows = bq_result.total_rows
         LOGGER.info('Total rows from BigQuery: %d', total_rows)
 
-        for row in iter_with_progress(bq_result, total_rows, "Loading Redis"):
+        for row in iter_with_progress(bq_result, total_rows, 'Loading Redis'):
             self.redis_client.set(
                 f'article:{row['article_id']}:page_views',
                 row['page_view_count']  # type: ignore[arg-type]
@@ -173,7 +173,7 @@ class PageViewsAndDownloadsProvider:
         total_rows = bq_result.total_rows
         LOGGER.info('Total rows from BigQuery: %d', total_rows)
 
-        for row in iter_with_progress(bq_result, total_rows, "Loading Redis"):
+        for row in iter_with_progress(bq_result, total_rows, 'Loading Redis'):
             self.redis_client.hset(
                 f'article:{row['article_id']}:page_views:by_date',
                 row['event_date'].isoformat(),
@@ -201,7 +201,7 @@ class PageViewsAndDownloadsProvider:
         total_rows = bq_result.total_rows
         LOGGER.info('Total rows from BigQuery: %d', total_rows)
 
-        for row in iter_with_progress(bq_result, total_rows, "Loading Redis"):
+        for row in iter_with_progress(bq_result, total_rows, 'Loading Redis'):
             self.redis_client.hset(
                 f'article:{row['article_id']}:page_views:by_month',
                 row['year_month'],
