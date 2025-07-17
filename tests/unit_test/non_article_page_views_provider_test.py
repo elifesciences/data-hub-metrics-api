@@ -13,6 +13,17 @@ CONTENT_TYPE_1: ContentTypeLiteral = 'blog-article'
 CONTENT_ID_1 = 'content_id_1'
 
 
+@pytest.fixture(name='redis_client_mock', autouse=True)
+def _redis_client_mock() -> MagicMock:
+    return MagicMock(name='redis_client')
+
+
+
+@pytest.fixture(name='redis_client_set_mock')
+def _redis_client_set_mock(redis_client_mock: MagicMock) -> MagicMock:
+    return redis_client_mock.set
+
+
 @pytest.fixture(name='redis_client_get_mock')
 def _redis_client_get_mock(redis_client_mock: MagicMock) -> MagicMock:
     return redis_client_mock.get

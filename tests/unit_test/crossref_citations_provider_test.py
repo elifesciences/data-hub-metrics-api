@@ -10,6 +10,11 @@ from data_hub_metrics_api.crossref_citations_provider import (
 )
 
 
+@pytest.fixture(name='redis_client_mock', autouse=True)
+def _redis_client_mock() -> MagicMock:
+    return MagicMock(name='redis_client')
+
+
 @pytest.fixture(name='iter_dict_from_bq_query_mock', autouse=True)
 def _iter_dict_from_bq_query_mock() -> Iterator[MagicMock]:
     with patch.object(
