@@ -19,11 +19,6 @@ def _iter_dict_from_bq_query_mock() -> Iterator[MagicMock]:
         yield mock
 
 
-@pytest.fixture(name='redis_client_mock')
-def _redis_client_mock() -> MagicMock:
-    return MagicMock(name='redis_client')
-
-
 class TestCrossrefCitationsProvider:
     def test_happy_path(self, redis_client_mock: MagicMock):
         redis_client_mock.hget.return_value = b'0'

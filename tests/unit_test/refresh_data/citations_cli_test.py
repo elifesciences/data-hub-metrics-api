@@ -6,6 +6,12 @@ from data_hub_metrics_api.refresh_data.citations_cli import main
 import data_hub_metrics_api.refresh_data.citations_cli as cli_module
 
 
+@pytest.fixture(name='get_redis_client_mock', autouse=True)
+def _get_redis_client_mock() -> Iterator[MagicMock]:
+    with patch.object(cli_module, 'get_redis_client') as mock:
+        yield mock
+
+
 @pytest.fixture(name='get_citations_provider_list_mock', autouse=True)
 def _get_citations_provider_list_mock() -> Iterator[MagicMock]:
     with patch.object(cli_module, 'get_citations_provider_list') as mock:

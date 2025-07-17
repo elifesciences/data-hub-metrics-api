@@ -7,6 +7,12 @@ from data_hub_metrics_api.refresh_data.page_views_and_downloads_monthly_cli impo
 import data_hub_metrics_api.refresh_data.page_views_and_downloads_monthly_cli as cli_module
 
 
+@pytest.fixture(name='get_redis_client_mock', autouse=True)
+def _get_redis_client_mock() -> Iterator[MagicMock]:
+    with patch.object(cli_module, 'get_redis_client') as mock:
+        yield mock
+
+
 @pytest.fixture(name='page_views_and_downloads_provider_class_mock', autouse=True)
 def _page_views_and_downloads_provider_class_mock() -> Iterator[MagicMock]:
     with patch.object(cli_module, 'PageViewsAndDownloadsProvider') as mock:
