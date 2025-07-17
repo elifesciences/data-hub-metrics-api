@@ -1,7 +1,6 @@
 # pylint: disable=duplicate-code
 from datetime import date
 import logging
-from pathlib import Path
 import re
 from typing import Literal, Optional, Sequence, TypedDict
 
@@ -55,7 +54,7 @@ class PageViewsAndDownloadsProvider:
     ):
         self.redis_client = redis_client
         self.gcp_project_name = gcp_project_name
-        self.page_view_and_download_totals_query = Path(
+        self.page_view_and_download_totals_query = (
             get_sql_query_file('page_view_and_download_totals_query.sql')
         )
 
