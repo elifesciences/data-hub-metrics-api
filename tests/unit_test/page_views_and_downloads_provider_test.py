@@ -16,11 +16,6 @@ import data_hub_metrics_api.page_views_and_downloads_provider as views_downloads
 METRIC_NAME_1: MetricNameLiteral = 'page_views'
 
 
-@pytest.fixture(name='redis_client_set_mock')
-def _redis_client_set_mock(redis_client_mock: MagicMock) -> MagicMock:
-    return redis_client_mock.set
-
-
 @pytest.fixture(name='redis_client_hset_mock')
 def _redis_client_hset_mock(redis_client_mock: MagicMock) -> MagicMock:
     return redis_client_mock.hset

@@ -30,3 +30,8 @@ def _bigquery_mock() -> Iterator[MagicMock]:
 @pytest.fixture(name='redis_client_mock', autouse=True)
 def _redis_client_mock() -> MagicMock:
     return MagicMock(name='redis_client')
+
+
+@pytest.fixture(name='redis_client_set_mock')
+def _redis_client_set_mock(redis_client_mock: MagicMock) -> MagicMock:
+    return redis_client_mock.set
