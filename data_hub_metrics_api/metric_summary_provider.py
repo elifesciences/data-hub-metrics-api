@@ -1,4 +1,3 @@
-# pylint: disable=duplicate-code
 import logging
 
 from data_hub_metrics_api.api_router_typing import (

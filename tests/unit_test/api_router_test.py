@@ -1,4 +1,3 @@
-# pylint: disable=duplicate-code
 from typing import Sequence
 from unittest.mock import MagicMock
 from fastapi import FastAPI
