@@ -9,7 +9,7 @@ from data_hub_metrics_api.api_router_typing import (
     ContentTypeLiteral,
     MetricTimePeriodResponseTypedDict
 )
-from data_hub_metrics_api.sql import get_sql_path
+from data_hub_metrics_api.sql import get_sql_query_file
 from data_hub_metrics_api.utils.bigquery import get_bq_result_from_bq_query
 
 LOGGER = logging.getLogger(__name__)
@@ -23,9 +23,9 @@ class NonArticlePageViewsProvider:
     ):
         self.redis_client = redis_client
         self.gcp_project_name = gcp_project_name
-        self.non_article_page_view_totals_query = Path(
-            get_sql_path('non_article_page_view_totals_query.sql')
-        ).read_text(encoding='utf-8')
+        self.non_article_page_view_totals_query = (
+            get_sql_query_file('non_article_page_view_totals_query.sql')
+        )
 
     def get_page_views_by_content_type(
         self,

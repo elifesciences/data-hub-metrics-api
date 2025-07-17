@@ -10,7 +10,7 @@ from redis import Redis
 
 from data_hub_metrics_api.api_router_typing import MetricTimePeriodResponseTypedDict
 
-from data_hub_metrics_api.sql import get_sql_path
+from data_hub_metrics_api.sql import get_sql_query_file
 from data_hub_metrics_api.utils.bigquery import get_bq_result_from_bq_query
 
 LOGGER = logging.getLogger(__name__)
@@ -56,16 +56,14 @@ class PageViewsAndDownloadsProvider:
         self.redis_client = redis_client
         self.gcp_project_name = gcp_project_name
         self.page_view_and_download_totals_query = Path(
-            get_sql_path('page_view_and_download_totals_query.sql')
-        ).read_text(encoding='utf-8')
+            get_sql_query_file('page_view_and_download_totals_query.sql')
+        )
 
         self.page_views_and_downloads_daily_query = (
-            Path(get_sql_path('page_views_and_downloads_daily_query.sql'))
-            .read_text(encoding='utf-8')
+            get_sql_query_file('page_views_and_downloads_daily_query.sql')
         )
         self.page_views_and_downloads_monthly_query = (
-            Path(get_sql_path('page_views_and_downloads_monthly_query.sql'))
-            .read_text(encoding='utf-8')
+           get_sql_query_file('page_views_and_downloads_monthly_query.sql')
         )
 
     def get_total_article_count(self) -> int:
