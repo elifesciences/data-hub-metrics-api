@@ -5,13 +5,13 @@ from pathlib import Path
 import re
 from typing import Literal, Optional, Sequence, TypedDict
 
-from tqdm import tqdm
 from redis import Redis
 
 from data_hub_metrics_api.api_router_typing import MetricTimePeriodResponseTypedDict
 
 from data_hub_metrics_api.sql import get_sql_query_file
 from data_hub_metrics_api.utils.bigquery import get_bq_result_from_bq_query
+from data_hub_metrics_api.utils.progress_bar import iter_with_progress
 
 LOGGER = logging.getLogger(__name__)
 
@@ -149,7 +149,7 @@ class PageViewsAndDownloadsProvider:
         total_rows = bq_result.total_rows
         LOGGER.info('Total rows from BigQuery: %d', total_rows)
 
-        for row in tqdm(bq_result, total=total_rows, desc="Loading Redis"):
+        for row in iter_with_progress(bq_result, total_rows, "Loading Redis"):
             self.redis_client.set(
                 f'article:{row['article_id']}:page_views',
                 row['page_view_count']  # type: ignore[arg-type]
@@ -175,7 +175,7 @@ class PageViewsAndDownloadsProvider:
         total_rows = bq_result.total_rows
         LOGGER.info('Total rows from BigQuery: %d', total_rows)
 
-        for row in tqdm(bq_result, total=total_rows, desc="Loading Redis"):
+        for row in iter_with_progress(bq_result, total_rows, "Loading Redis"):
             self.redis_client.hset(
                 f'article:{row['article_id']}:page_views:by_date',
                 row['event_date'].isoformat(),
@@ -203,7 +203,7 @@ class PageViewsAndDownloadsProvider:
         total_rows = bq_result.total_rows
         LOGGER.info('Total rows from BigQuery: %d', total_rows)
 
-        for row in tqdm(bq_result, total=total_rows, desc="Loading Redis"):
+        for row in iter_with_progress(bq_result, total_rows, "Loading Redis"):
             self.redis_client.hset(
                 f'article:{row['article_id']}:page_views:by_month',
                 row['year_month'],
