@@ -103,7 +103,7 @@ lint: flake8 pylint mypy
 
 pytest:
 	$(DOCKER_COMPOSE) run --rm data-hub-metrics-api-dev \
-		python -m pytest data_hub_metrics_api tests
+		env PYTHONPATH=. python -m pytest data_hub_metrics_api tests
 
 test: lint pytest
 
