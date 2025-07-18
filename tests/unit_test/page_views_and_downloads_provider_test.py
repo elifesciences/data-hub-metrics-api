@@ -361,7 +361,7 @@ class TestPageViewsAndDownloadsProvider:
         self,
         get_bq_result_from_bq_query_mock: MagicMock,
         page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
-        redis_client_hset_mock: MagicMock
+        redis_client_pipeline_mock: MagicMock
     ):
         mock_bq_result = MagicMock()
         mock_bq_result.total_rows = 1
@@ -372,11 +372,14 @@ class TestPageViewsAndDownloadsProvider:
             'download_count': 2
         }])
         get_bq_result_from_bq_query_mock.return_value = mock_bq_result
+        mock_pipeline = MagicMock()
+        redis_client_pipeline_mock.return_value.__enter__.return_value = mock_pipeline
         page_views_and_downloads_provider.refresh_page_views_and_downloads_daily(number_of_days=3)
-        redis_client_hset_mock.assert_has_calls([
+        mock_pipeline.hset.assert_has_calls([
             call('article:12345:page_views:by_date', '2023-10-01', 5),
             call('article:12345:downloads:by_date', '2023-10-01', 2)
         ])
+        mock_pipeline.execute.assert_called_once()
 
     def test_should_replace_number_of_months_in_query(
         self,

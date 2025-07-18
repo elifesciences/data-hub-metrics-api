@@ -166,7 +166,8 @@ class PageViewsAndDownloadsProvider:
 
     def refresh_page_views_and_downloads_daily(
         self,
-        number_of_days: int
+        number_of_days: int,
+        batch_size: int = BATCH_SIZE
     ) -> None:
         LOGGER.info('Refreshing page views and downloads daily from BigQuery...')
         bq_result = get_bq_result_from_bq_query(
@@ -179,17 +180,21 @@ class PageViewsAndDownloadsProvider:
         total_rows = bq_result.total_rows
         LOGGER.info('Total rows from BigQuery: %d', total_rows)
 
-        for row in iter_with_progress(bq_result, total_rows, 'Loading Redis'):
-            self.redis_client.hset(
-                f'article:{row['article_id']}:page_views:by_date',
-                row['event_date'].isoformat(),
-                row['page_view_count']  # type: ignore[arg-type]
-            )
-            self.redis_client.hset(
-                f'article:{row['article_id']}:downloads:by_date',
-                row['event_date'].isoformat(),
-                row['download_count']  # type: ignore[arg-type]
-            )
+        with self.redis_client.pipeline() as pipe:
+            for i, row in enumerate(iter_with_progress(bq_result, total_rows, 'Loading Redis'), 1):
+                pipe.hset(
+                    f'article:{row['article_id']}:page_views:by_date',
+                    row['event_date'].isoformat(),
+                    row['page_view_count']  # type: ignore[arg-type]
+                )
+                pipe.hset(
+                    f'article:{row['article_id']}:downloads:by_date',
+                    row['event_date'].isoformat(),
+                    row['download_count']  # type: ignore[arg-type]
+                )
+                if i % batch_size == 0:
+                    pipe.execute()
+            pipe.execute()
         LOGGER.info('Done: Refreshing page views and dosnloads daily from BigQuery')
 
     def refresh_page_views_and_downloads_monthly(
