@@ -1,4 +1,3 @@
-# pylint: disable=duplicate-code
 from typing import Iterator
 from unittest.mock import MagicMock, patch
 
@@ -8,28 +7,24 @@ from data_hub_metrics_api.refresh_data.non_article_page_view_totals_cli import m
 import data_hub_metrics_api.refresh_data.non_article_page_view_totals_cli as cli_module
 
 
-@pytest.fixture(name="get_redis_client_mock", autouse=True)
-def _get_redis_client_mock() -> Iterator[MagicMock]:
-    with patch.object(cli_module, "get_redis_client") as mock:
-        yield mock
-
-
-@pytest.fixture(name="non_article_page_views_provider_class_mock", autouse=True)
+@pytest.fixture(name='non_article_page_views_provider_class_mock', autouse=True)
 def _non_article_page_views_provider_class_mock() -> Iterator[MagicMock]:
-    with patch.object(cli_module, "NonArticlePageViewsProvider") as mock:
+    with patch.object(cli_module, 'NonArticlePageViewsProvider') as mock:
         yield mock
 
 
-@pytest.fixture(name="non_article_page_views_provider_mock")
+@pytest.fixture(name='non_article_page_views_provider_mock')
 def _non_article_page_views_provider_mock(
     non_article_page_views_provider_class_mock: MagicMock
 ) -> MagicMock:
     return non_article_page_views_provider_class_mock.return_value
 
 
+@pytest.mark.parametrize('get_redis_client_mock', [cli_module], indirect=True)
 class TestMain:
     def test_should_call_refresh_page_view_and_download_totals_on_the_provider(
         self,
+        get_redis_client_mock,  # pylint: disable=unused-argument
         non_article_page_views_provider_mock: MagicMock,
     ):
         main()

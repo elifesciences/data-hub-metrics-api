@@ -9,7 +9,7 @@ LOGGER = logging.getLogger(__name__)
 def main():
     redis_client = get_redis_client()
     crossref_citations_provider = CrossrefCitationsProvider(
-        name="Crossref",
+        name='Crossref',
         redis_client=redis_client
     )
     citations_provider_list = get_citations_provider_list(crossref_citations_provider)
@@ -19,6 +19,6 @@ def main():
     LOGGER.info('Refreshing data from BigQuery completed.')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     main()

@@ -12,6 +12,6 @@ def main():
     page_views_and_downloads_provider.refresh_page_view_and_download_totals()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     main()

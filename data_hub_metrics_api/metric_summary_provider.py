@@ -1,4 +1,3 @@
-# pylint: disable=duplicate-code
 import logging
 
 from data_hub_metrics_api.api_router_typing import (
@@ -27,24 +26,24 @@ class MetricSummaryProvider:
         article_id: str
     ) -> MetricSummaryItemTypedDict:
         return {
-            "id": int(article_id),
-            "views": self.page_views_and_downloads_provider.get_metric_total_for_article_id(
+            'id': int(article_id),
+            'views': self.page_views_and_downloads_provider.get_metric_total_for_article_id(
                 article_id=article_id,
                 metric_name='page_views'
             ),
-            "downloads": self.page_views_and_downloads_provider.get_metric_total_for_article_id(
+            'downloads': self.page_views_and_downloads_provider.get_metric_total_for_article_id(
                 article_id=article_id,
                 metric_name='downloads'
             ),
-            "crossref": (
+            'crossref': (
                 self
                 .crossref_citations_provider
                 .get_combined_citations_source_metric_for_article_id(
                     article_id=article_id
                 )['citations']
             ),
-            "pubmed": 0,
-            "scopus": 0
+            'pubmed': 0,
+            'scopus': 0
         }
 
     def get_summary_for_article_id(
@@ -52,8 +51,8 @@ class MetricSummaryProvider:
         article_id: str
     ) -> MetricSummaryResponseTypedDict:
         return {
-            "total": 1,
-            "items": [
+            'total': 1,
+            'items': [
                 self.get_summary_item_for_article_id(article_id)
             ]
         }
@@ -74,8 +73,8 @@ class MetricSummaryProvider:
         LOGGER.debug('summary: article_ids=%r', article_ids)
 
         return {
-            "total": total,
-            "items": [
+            'total': total,
+            'items': [
                 self.get_summary_item_for_article_id(article_id)
                 for article_id in article_ids
             ]

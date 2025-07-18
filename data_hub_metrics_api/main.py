@@ -40,8 +40,8 @@ def get_citations_provider_list(
 ) -> Sequence[CitationsProvider]:
     return [
         crossref_citations_provider,
-        DummyCitationsProvider(name="PubMed Central"),
-        DummyCitationsProvider(name="Scopus")
+        DummyCitationsProvider(name='PubMed Central'),
+        DummyCitationsProvider(name='Scopus')
     ]
 
 
@@ -52,7 +52,7 @@ def create_app():
 
     page_views_and_downloads_provider = PageViewsAndDownloadsProvider(redis_client)
     crossref_citations_provider = CrossrefCitationsProvider(
-        name="Crossref",
+        name='Crossref',
         redis_client=redis_client
     )
     citations_provider_list = get_citations_provider_list(crossref_citations_provider)

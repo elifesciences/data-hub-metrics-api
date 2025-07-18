@@ -9,7 +9,6 @@ from data_hub_metrics_api.non_article_page_views_provider import (
     NonArticlePageViewsProvider
 )
 
-
 CONTENT_TYPE_1: ContentTypeLiteral = 'blog-article'
 CONTENT_ID_1 = 'content_id_1'
 

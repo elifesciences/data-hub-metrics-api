@@ -1,13 +1,12 @@
 import logging
 
-from pathlib import Path
 from typing import Iterable, Optional, TypedDict, cast, override
 
 from redis import Redis
 
 from data_hub_metrics_api.api_router_typing import CitationsSourceMetricTypedDict
 from data_hub_metrics_api.citations_provider import CitationsProvider
-from data_hub_metrics_api.sql import get_sql_path
+from data_hub_metrics_api.sql import get_sql_query_file
 from data_hub_metrics_api.utils.bigquery import iter_dict_from_bq_query
 
 LOGGER = logging.getLogger(__name__)
@@ -29,9 +28,7 @@ class CrossrefCitationsProvider(CitationsProvider):
         super().__init__(name=name)
         self.redis_client = redis_client
         self.gcp_project_name = gcp_project_name
-        self.crossref_citations_query = (
-            Path(get_sql_path('crossref_citations_query.sql')).read_text(encoding='utf-8')
-        )
+        self.crossref_citations_query = get_sql_query_file('crossref_citations_query.sql')
 
     def get_citations_source_metric_for_article_id_and_version(
         self,

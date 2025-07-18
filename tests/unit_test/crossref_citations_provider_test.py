@@ -10,6 +10,11 @@ from data_hub_metrics_api.crossref_citations_provider import (
 )
 
 
+@pytest.fixture(name='redis_client_mock', autouse=True)
+def _redis_client_mock() -> MagicMock:
+    return MagicMock(name='redis_client')
+
+
 @pytest.fixture(name='iter_dict_from_bq_query_mock', autouse=True)
 def _iter_dict_from_bq_query_mock() -> Iterator[MagicMock]:
     with patch.object(
@@ -19,20 +24,15 @@ def _iter_dict_from_bq_query_mock() -> Iterator[MagicMock]:
         yield mock
 
 
-@pytest.fixture(name='redis_client_mock')
-def _redis_client_mock() -> MagicMock:
-    return MagicMock(name='redis_client')
-
-
 class TestCrossrefCitationsProvider:
     def test_happy_path(self, redis_client_mock: MagicMock):
         redis_client_mock.hget.return_value = b'0'
         citation_provider = CrossrefCitationsProvider(redis_client=redis_client_mock)
         result = citation_provider.get_citations_source_metric_for_article_id_and_version('1234', 1)
         assert result == {
-            "service": "Crossref",
-            "uri": "https://doi.org/10.7554/eLife.1234.1",
-            "citations": 0
+            'service': 'Crossref',
+            'uri': 'https://doi.org/10.7554/eLife.1234.1',
+            'citations': 0
         }
 
     def test_should_put_data_in_redis(
@@ -66,9 +66,9 @@ class TestCrossrefCitationsProvider:
             '1'
         )
         assert result == {
-            "service": "Crossref",
-            "uri": "https://doi.org/10.7554/eLife.12345.1",
-            "citations": 10
+            'service': 'Crossref',
+            'uri': 'https://doi.org/10.7554/eLife.12345.1',
+            'citations': 10
         }
 
     def test_should_return_zero_for_no_citations_by_version(
@@ -93,9 +93,9 @@ class TestCrossrefCitationsProvider:
         )
         redis_client_mock.hgetall.assert_called_once_with('article:12345:crossref_citations')
         assert result == {
-            "service": "Crossref",
-            "uri": "https://doi.org/10.7554/eLife.12345",
-            "citations": 12 + 8 + 43 + 3
+            'service': 'Crossref',
+            'uri': 'https://doi.org/10.7554/eLife.12345',
+            'citations': 12 + 8 + 43 + 3
         }
 
     def test_should_return_zero_for_no_citations_by_article_id(

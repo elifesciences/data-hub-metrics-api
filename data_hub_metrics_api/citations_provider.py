@@ -36,9 +36,9 @@ class DummyCitationsProvider(CitationsProvider):
         version_number: int
     ) -> CitationsSourceMetricTypedDict:
         return {
-            "service": self.name,
-            "uri": "",
-            "citations": 0
+            'service': self.name,
+            'uri': '',
+            'citations': 0
         }
 
     def get_combined_citations_source_metric_for_article_id(
@@ -46,7 +46,7 @@ class DummyCitationsProvider(CitationsProvider):
         article_id: str
     ) -> CitationsSourceMetricTypedDict:
         return {
-            "service": self.name,
-            "uri": "",
-            "citations": 0
+            'service': self.name,
+            'uri': '',
+            'citations': 0
         }

@@ -23,6 +23,6 @@ def main(vargs: Optional[Sequence[str]] = None):
     )
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     main()

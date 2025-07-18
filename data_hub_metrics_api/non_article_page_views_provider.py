@@ -1,16 +1,14 @@
 
 import logging
-from pathlib import Path
 from typing import Literal, Optional
-
-from tqdm import tqdm
 
 from data_hub_metrics_api.api_router_typing import (
     ContentTypeLiteral,
     MetricTimePeriodResponseTypedDict
 )
-from data_hub_metrics_api.sql import get_sql_path
+from data_hub_metrics_api.sql import get_sql_query_file
 from data_hub_metrics_api.utils.bigquery import get_bq_result_from_bq_query
+from data_hub_metrics_api.utils.progress_bar import iter_with_progress
 
 LOGGER = logging.getLogger(__name__)
 
@@ -23,9 +21,9 @@ class NonArticlePageViewsProvider:
     ):
         self.redis_client = redis_client
         self.gcp_project_name = gcp_project_name
-        self.non_article_page_view_totals_query = Path(
-            get_sql_path('non_article_page_view_totals_query.sql')
-        ).read_text(encoding='utf-8')
+        self.non_article_page_view_totals_query = (
+            get_sql_query_file('non_article_page_view_totals_query.sql')
+        )
 
     def get_page_views_by_content_type(
         self,
@@ -57,9 +55,9 @@ class NonArticlePageViewsProvider:
         total_rows = bq_result.total_rows
         LOGGER.info('Total rows from BigQuery: %d', total_rows)
 
-        for row in tqdm(bq_result, total=total_rows, desc="Loading Redis"):
+        for row in iter_with_progress(bq_result, total_rows, 'Loading Redis'):
             self.redis_client.set(
-                f'non-article:{row["content_type"]}:{row["content_id"]}:page_views',
+                f'non-article:{row['content_type']}:{row['content_id']}:page_views',
                 row['page_view_count']
             )
         LOGGER.info('Done: Refreshing non-article page view totals data from BigQuery')
