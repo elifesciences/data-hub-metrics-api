@@ -68,7 +68,7 @@ class TestGetQueryWithReplacedNumberOfMonths:
         ) == 'SELECT 12'
 
 
-class TestPageViewsAndDownloadsProvider:
+class TestGetArticleIds:
     def test_should_return_empty_article_ids_if_redis_is_empty(
         self,
         page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
@@ -149,6 +149,8 @@ class TestPageViewsAndDownloadsProvider:
             page=3
         ) == []
 
+
+class TestGetMetricTotalForArticleId:
     def test_should_return_zero_for_total_metric_value_if_no_metric_value(
         self,
         page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
@@ -172,6 +174,8 @@ class TestPageViewsAndDownloadsProvider:
         ) == 123
         redis_client_mock.get.assert_called_with(f'article:12345:{METRIC_NAME_1}')
 
+
+class TestGetMetricForArticleIdByTimePeriod:
     def test_should_return_total_metric_value_as_total_value(
         self,
         page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
@@ -300,6 +304,8 @@ class TestPageViewsAndDownloadsProvider:
             'periods': []
         }
 
+
+class TestPageViewsAndDownloadsProvider:
     def test_should_put_page_view_and_download_totals_in_redis(
         self,
         get_bq_result_from_bq_query_mock: MagicMock,
@@ -341,7 +347,7 @@ class TestPageViewsAndDownloadsProvider:
             )
         )
 
-    def test_should_put_data_in_redis(
+    def test_should_put_data_in_redis_for_daily_page_views_and_downloads(
         self,
         get_bq_result_from_bq_query_mock: MagicMock,
         page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
@@ -381,7 +387,7 @@ class TestPageViewsAndDownloadsProvider:
             )
         )
 
-    def test_should_put_data_in_redis_for_monthly_page_views(
+    def test_should_put_data_in_redis_for_monthly_page_views_and_downloads(
         self,
         get_bq_result_from_bq_query_mock: MagicMock,
         page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
