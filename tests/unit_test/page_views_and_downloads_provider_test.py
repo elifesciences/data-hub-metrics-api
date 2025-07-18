@@ -26,6 +26,11 @@ def _redis_client_set_mock(redis_client_mock: MagicMock) -> MagicMock:
     return redis_client_mock.set
 
 
+@pytest.fixture(name='redis_client_pipeline_mock')
+def _redis_client_pipeline_mock(redis_client_mock: MagicMock) -> MagicMock:
+    return redis_client_mock.pipeline
+
+
 @pytest.fixture(name='redis_client_hset_mock')
 def _redis_client_hset_mock(redis_client_mock: MagicMock) -> MagicMock:
     return redis_client_mock.hset
@@ -310,7 +315,7 @@ class TestPageViewsAndDownloadsProvider:
         self,
         get_bq_result_from_bq_query_mock: MagicMock,
         page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
-        redis_client_set_mock: MagicMock
+        redis_client_pipeline_mock: MagicMock
     ):
         mock_bq_result = MagicMock()
         mock_bq_result.total_rows = 1
@@ -320,15 +325,20 @@ class TestPageViewsAndDownloadsProvider:
             'download_count': 2
         }])
         get_bq_result_from_bq_query_mock.return_value = mock_bq_result
+        mock_pipeline = MagicMock()
+        redis_client_pipeline_mock.return_value.__enter__.return_value = mock_pipeline
+
         page_views_and_downloads_provider.refresh_page_view_and_download_totals()
         get_bq_result_from_bq_query_mock.assert_called_with(
             project_name=page_views_and_downloads_provider.gcp_project_name,
             query=page_views_and_downloads_provider.page_view_and_download_totals_query
         )
-        redis_client_set_mock.assert_has_calls([
+
+        mock_pipeline.set.assert_has_calls([
             call('article:12345:page_views', 5),
             call('article:12345:downloads', 2)
         ])
+        mock_pipeline.execute.assert_called_once()
 
     def test_should_replace_number_of_days_in_query(
         self,

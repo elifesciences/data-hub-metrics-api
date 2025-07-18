@@ -15,6 +15,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 MetricNameLiteral = Literal['page_views', 'downloads']
+BATCH_SIZE = 1000
 
 
 class BigQueryResultRow(TypedDict):
@@ -138,7 +139,7 @@ class PageViewsAndDownloadsProvider:
             ]
         }
 
-    def refresh_page_view_and_download_totals(self) -> None:
+    def refresh_page_view_and_download_totals(self, batch_size: int = BATCH_SIZE) -> None:
         LOGGER.info('Refreshing page view and download totals data from BigQuery...')
         bq_result = get_bq_result_from_bq_query(
             project_name=self.gcp_project_name,
@@ -147,15 +148,20 @@ class PageViewsAndDownloadsProvider:
         total_rows = bq_result.total_rows
         LOGGER.info('Total rows from BigQuery: %d', total_rows)
 
-        for row in iter_with_progress(bq_result, total_rows, 'Loading Redis'):
-            self.redis_client.set(
-                f'article:{row['article_id']}:page_views',
-                row['page_view_count']  # type: ignore[arg-type]
-            )
-            self.redis_client.set(
-                f'article:{row['article_id']}:downloads',
-                row['download_count']  # type: ignore[arg-type]
-            )
+        with self.redis_client.pipeline() as pipe:
+            for i, row in enumerate(iter_with_progress(bq_result, total_rows, 'Loading Redis'), 1):
+                pipe.set(
+                    f'article:{row['article_id']}:page_views',
+                    row['page_view_count']  # type: ignore[arg-type]
+                )
+                pipe.set(
+                    f'article:{row['article_id']}:downloads',
+                    row['download_count']  # type: ignore[arg-type]
+                )
+                if i % batch_size == 0:
+                    pipe.execute()
+            pipe.execute()
+
         LOGGER.info('Done: Refreshing page view and download totals data from BigQuery')
 
     def refresh_page_views_and_downloads_daily(
