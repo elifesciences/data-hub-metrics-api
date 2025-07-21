@@ -1,17 +1,10 @@
 from typing import Iterable
 from unittest.mock import MagicMock
 
-import pytest
-
 from data_hub_metrics_api.crossref_citations_provider import (
     BigQueryResultRow,
     CrossrefCitationsProvider
 )
-
-
-@pytest.fixture(name='redis_client_pipeline_mock')
-def _redis_client_pipeline_mock(redis_client_mock: MagicMock) -> MagicMock:
-    return redis_client_mock.pipeline.return_value.__enter__.return_value
 
 
 class TestCrossrefCitationsProvider:
