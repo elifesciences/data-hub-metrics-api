@@ -9,6 +9,7 @@ from data_hub_metrics_api.api_router_typing import MetricTimePeriodResponseTyped
 
 from data_hub_metrics_api.sql import get_sql_query_file
 from data_hub_metrics_api.utils import bigquery
+from data_hub_metrics_api.utils.collections import iter_batch_iterable
 
 
 LOGGER = logging.getLogger(__name__)
@@ -147,19 +148,17 @@ class PageViewsAndDownloadsProvider:
             desc='Loading Redis'
         )
         with self.redis_client.pipeline() as pipe:
-            for i, row in enumerate(bq_result_iterable, 1):
-                pipe.set(
-                    f'article:{row['article_id']}:page_views',
-                    row['page_view_count']  # type: ignore[arg-type]
-                )
-                pipe.set(
-                    f'article:{row['article_id']}:downloads',
-                    row['download_count']  # type: ignore[arg-type]
-                )
-                if i % batch_size == 0:
-                    pipe.execute()
-            pipe.execute()
-
+            for batch in iter_batch_iterable(bq_result_iterable, batch_size=batch_size):
+                for row in batch:
+                    pipe.set(
+                        f'article:{row['article_id']}:page_views',
+                        row['page_view_count']  # type: ignore[arg-type]
+                    )
+                    pipe.set(
+                        f'article:{row['article_id']}:downloads',
+                        row['download_count']  # type: ignore[arg-type]
+                    )
+                pipe.execute()
         LOGGER.info('Done: Refreshing page view and download totals data from BigQuery')
 
     def refresh_page_views_and_downloads_daily(
@@ -177,20 +176,19 @@ class PageViewsAndDownloadsProvider:
             desc='Loading Redis'
         )
         with self.redis_client.pipeline() as pipe:
-            for i, row in enumerate(bq_result_iterable, 1):
-                pipe.hset(
-                    f'article:{row['article_id']}:page_views:by_date',
-                    row['event_date'].isoformat(),
-                    row['page_view_count']  # type: ignore[arg-type]
-                )
-                pipe.hset(
-                    f'article:{row['article_id']}:downloads:by_date',
-                    row['event_date'].isoformat(),
-                    row['download_count']  # type: ignore[arg-type]
-                )
-                if i % batch_size == 0:
-                    pipe.execute()
-            pipe.execute()
+            for batch in iter_batch_iterable(bq_result_iterable, batch_size=batch_size):
+                for row in batch:
+                    pipe.hset(
+                        f'article:{row['article_id']}:page_views:by_date',
+                        row['event_date'].isoformat(),
+                        row['page_view_count']  # type: ignore[arg-type]
+                    )
+                    pipe.hset(
+                        f'article:{row['article_id']}:downloads:by_date',
+                        row['event_date'].isoformat(),
+                        row['download_count']  # type: ignore[arg-type]
+                    )
+                pipe.execute()
         LOGGER.info('Done: Refreshing page views and dosnloads daily from BigQuery')
 
     def refresh_page_views_and_downloads_monthly(
@@ -208,18 +206,17 @@ class PageViewsAndDownloadsProvider:
             desc='Loading Redis'
         )
         with self.redis_client.pipeline() as pipe:
-            for i, row in enumerate(bq_result_iterable, 1):
-                pipe.hset(
-                    f'article:{row['article_id']}:page_views:by_month',
-                    row['year_month'],
-                    row['page_view_count']  # type: ignore[arg-type]
-                )
-                pipe.hset(
-                    f'article:{row['article_id']}:downloads:by_month',
-                    row['year_month'],
-                    row['download_count']  # type: ignore[arg-type]
-                )
-                if i % batch_size == 0:
-                    pipe.execute()
-            pipe.execute()
+            for batch in iter_batch_iterable(bq_result_iterable, batch_size=batch_size):
+                for row in batch:
+                    pipe.hset(
+                        f'article:{row['article_id']}:page_views:by_month',
+                        row['year_month'],
+                        row['page_view_count']  # type: ignore[arg-type]
+                    )
+                    pipe.hset(
+                        f'article:{row['article_id']}:downloads:by_month',
+                        row['year_month'],
+                        row['download_count']  # type: ignore[arg-type]
+                    )
+                pipe.execute()
         LOGGER.info('Done: Refreshing monthly page views and downloads from BigQuery')
