@@ -7,7 +7,7 @@ from redis import Redis
 from data_hub_metrics_api.api_router_typing import CitationsSourceMetricTypedDict
 from data_hub_metrics_api.citations_provider import CitationsProvider
 from data_hub_metrics_api.sql import get_sql_query_file
-from data_hub_metrics_api.utils.bigquery import iter_dict_from_bq_query
+from data_hub_metrics_api.utils import bigquery
 
 LOGGER = logging.getLogger(__name__)
 
@@ -78,9 +78,10 @@ class CrossrefCitationsProvider(CitationsProvider):
         LOGGER.info('Refreshing citation data from BigQuery...')
         bq_result = cast(
             Iterable[BigQueryResultRow],
-            iter_dict_from_bq_query(
-                self.gcp_project_name,
-                self.crossref_citations_query
+            bigquery.iter_dict_from_bq_query_with_progress(
+                project_name=self.gcp_project_name,
+                query=self.crossref_citations_query,
+                desc='Loading Redis'
             )
         )
         for row in bq_result:
