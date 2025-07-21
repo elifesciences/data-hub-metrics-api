@@ -7,7 +7,7 @@ from redis import Redis
 
 from data_hub_metrics_api.api_router_typing import MetricTimePeriodResponseTypedDict
 
-from data_hub_metrics_api.sql import get_sql_query_file
+from data_hub_metrics_api.sql import get_sql_query_from_file
 from data_hub_metrics_api.utils import bigquery
 from data_hub_metrics_api.utils.collections import iter_batch_iterable
 
@@ -56,14 +56,14 @@ class PageViewsAndDownloadsProvider:
         self.redis_client = redis_client
         self.gcp_project_name = gcp_project_name
         self.page_view_and_download_totals_query = (
-            get_sql_query_file('page_view_and_download_totals_query.sql')
+            get_sql_query_from_file('page_view_and_download_totals_query.sql')
         )
 
         self.page_views_and_downloads_daily_query = (
-            get_sql_query_file('page_views_and_downloads_daily_query.sql')
+            get_sql_query_from_file('page_views_and_downloads_daily_query.sql')
         )
         self.page_views_and_downloads_monthly_query = (
-           get_sql_query_file('page_views_and_downloads_monthly_query.sql')
+           get_sql_query_from_file('page_views_and_downloads_monthly_query.sql')
         )
 
     def get_total_article_count(self) -> int:

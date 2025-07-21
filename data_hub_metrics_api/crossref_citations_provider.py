@@ -6,7 +6,7 @@ from redis import Redis
 
 from data_hub_metrics_api.api_router_typing import CitationsSourceMetricTypedDict
 from data_hub_metrics_api.citations_provider import CitationsProvider
-from data_hub_metrics_api.sql import get_sql_query_file
+from data_hub_metrics_api.sql import get_sql_query_from_file
 from data_hub_metrics_api.utils import bigquery
 from data_hub_metrics_api.utils.collections import iter_batch_iterable
 
@@ -31,7 +31,7 @@ class CrossrefCitationsProvider(CitationsProvider):
         super().__init__(name=name)
         self.redis_client = redis_client
         self.gcp_project_name = gcp_project_name
-        self.crossref_citations_query = get_sql_query_file('crossref_citations_query.sql')
+        self.crossref_citations_query = get_sql_query_from_file('crossref_citations_query.sql')
 
     def get_citations_source_metric_for_article_id_and_version(
         self,

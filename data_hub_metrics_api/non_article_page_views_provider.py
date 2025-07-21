@@ -7,7 +7,7 @@ from data_hub_metrics_api.api_router_typing import (
     ContentTypeLiteral,
     MetricTimePeriodResponseTypedDict
 )
-from data_hub_metrics_api.sql import get_sql_query_file
+from data_hub_metrics_api.sql import get_sql_query_from_file
 from data_hub_metrics_api.utils import bigquery
 from data_hub_metrics_api.utils.collections import iter_batch_iterable
 
@@ -25,7 +25,7 @@ class NonArticlePageViewsProvider:
         self.redis_client = redis_client
         self.gcp_project_name = gcp_project_name
         self.non_article_page_view_totals_query = (
-            get_sql_query_file('non_article_page_view_totals_query.sql')
+            get_sql_query_from_file('non_article_page_view_totals_query.sql')
         )
 
     def get_page_views_by_content_type(
