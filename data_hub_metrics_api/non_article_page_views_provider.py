@@ -7,8 +7,7 @@ from data_hub_metrics_api.api_router_typing import (
     MetricTimePeriodResponseTypedDict
 )
 from data_hub_metrics_api.sql import get_sql_query_file
-from data_hub_metrics_api.utils.bigquery import get_bq_result_from_bq_query
-from data_hub_metrics_api.utils.progress_bar import iter_with_progress
+from data_hub_metrics_api.utils.bigquery import iter_dict_from_bq_query_with_progress
 
 LOGGER = logging.getLogger(__name__)
 
@@ -48,14 +47,12 @@ class NonArticlePageViewsProvider:
 
     def refresh_non_article_page_view_totals(self) -> None:
         LOGGER.info('Refreshing non-article page view totals data from BigQuery...')
-        bq_result = get_bq_result_from_bq_query(
+        bq_result_iterable = iter_dict_from_bq_query_with_progress(
             project_name=self.gcp_project_name,
-            query=self.non_article_page_view_totals_query
+            query=self.non_article_page_view_totals_query,
+            desc='Loading Redis'
         )
-        total_rows = bq_result.total_rows
-        LOGGER.info('Total rows from BigQuery: %d', total_rows)
-
-        for row in iter_with_progress(bq_result, total_rows, 'Loading Redis'):
+        for row in bq_result_iterable:
             self.redis_client.set(
                 f'non-article:{row['content_type']}:{row['content_id']}:page_views',
                 row['page_view_count']
