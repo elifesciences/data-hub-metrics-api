@@ -10,11 +10,6 @@ from data_hub_metrics_api.page_views_and_downloads_provider import (
 )
 
 
-@pytest.fixture(name='redis_client_mock', autouse=True)
-def _redis_client_mock() -> MagicMock:
-    return MagicMock(name='redis_client')
-
-
 @pytest.fixture(name='page_views_and_downloads_provider_mock')
 def _page_views_and_downloads_provider_mock() -> MagicMock:
     return MagicMock(

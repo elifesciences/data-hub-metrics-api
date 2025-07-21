@@ -12,11 +12,9 @@ def _get_citations_provider_list_mock() -> Iterator[MagicMock]:
         yield mock
 
 
-@pytest.mark.parametrize('get_redis_client_mock', [cli_module], indirect=True)
 class TestMain:
     def test_should_call_refresh_data_on_citations_provider(
         self,
-        get_redis_client_mock,  # pylint: disable=unused-argument
         get_citations_provider_list_mock: MagicMock,
     ):
         provider = MagicMock(name='provider_1')

@@ -1,4 +1,5 @@
 
+# pylint: disable=duplicate-code
 import logging
 from typing import Literal, Optional
 
@@ -6,11 +7,13 @@ from data_hub_metrics_api.api_router_typing import (
     ContentTypeLiteral,
     MetricTimePeriodResponseTypedDict
 )
-from data_hub_metrics_api.sql import get_sql_query_file
-from data_hub_metrics_api.utils.bigquery import get_bq_result_from_bq_query
-from data_hub_metrics_api.utils.progress_bar import iter_with_progress
+from data_hub_metrics_api.sql import get_sql_query_from_file
+from data_hub_metrics_api.utils import bigquery
+from data_hub_metrics_api.utils.collections import iter_batch_iterable
 
 LOGGER = logging.getLogger(__name__)
+
+BATCH_SIZE = 1000
 
 
 class NonArticlePageViewsProvider:
@@ -22,7 +25,7 @@ class NonArticlePageViewsProvider:
         self.redis_client = redis_client
         self.gcp_project_name = gcp_project_name
         self.non_article_page_view_totals_query = (
-            get_sql_query_file('non_article_page_view_totals_query.sql')
+            get_sql_query_from_file('non_article_page_view_totals_query.sql')
         )
 
     def get_page_views_by_content_type(
@@ -46,18 +49,19 @@ class NonArticlePageViewsProvider:
             'periods': []
         }
 
-    def refresh_non_article_page_view_totals(self) -> None:
+    def refresh_non_article_page_view_totals(self, batch_size: int = BATCH_SIZE) -> None:
         LOGGER.info('Refreshing non-article page view totals data from BigQuery...')
-        bq_result = get_bq_result_from_bq_query(
+        bq_result_iterable = bigquery.iter_dict_from_bq_query_with_progress(
             project_name=self.gcp_project_name,
-            query=self.non_article_page_view_totals_query
+            query=self.non_article_page_view_totals_query,
+            desc='Loading Redis'
         )
-        total_rows = bq_result.total_rows
-        LOGGER.info('Total rows from BigQuery: %d', total_rows)
-
-        for row in iter_with_progress(bq_result, total_rows, 'Loading Redis'):
-            self.redis_client.set(
-                f'non-article:{row['content_type']}:{row['content_id']}:page_views',
-                row['page_view_count']
-            )
+        with self.redis_client.pipeline() as pipe:
+            for batch in iter_batch_iterable(bq_result_iterable, batch_size=batch_size):
+                for row in batch:
+                    pipe.set(
+                        f'non-article:{row['content_type']}:{row['content_id']}:page_views',
+                        row['page_view_count']
+                    )
+                pipe.execute()
         LOGGER.info('Done: Refreshing non-article page view totals data from BigQuery')

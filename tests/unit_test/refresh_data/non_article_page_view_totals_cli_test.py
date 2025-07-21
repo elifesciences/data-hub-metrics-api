@@ -20,11 +20,9 @@ def _non_article_page_views_provider_mock(
     return non_article_page_views_provider_class_mock.return_value
 
 
-@pytest.mark.parametrize('get_redis_client_mock', [cli_module], indirect=True)
 class TestMain:
     def test_should_call_refresh_page_view_and_download_totals_on_the_provider(
         self,
-        get_redis_client_mock,  # pylint: disable=unused-argument
         non_article_page_views_provider_mock: MagicMock,
     ):
         main()

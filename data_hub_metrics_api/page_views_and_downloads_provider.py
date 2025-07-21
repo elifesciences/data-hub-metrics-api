@@ -7,9 +7,10 @@ from redis import Redis
 
 from data_hub_metrics_api.api_router_typing import MetricTimePeriodResponseTypedDict
 
-from data_hub_metrics_api.sql import get_sql_query_file
-from data_hub_metrics_api.utils.bigquery import get_bq_result_from_bq_query
-from data_hub_metrics_api.utils.progress_bar import iter_with_progress
+from data_hub_metrics_api.sql import get_sql_query_from_file
+from data_hub_metrics_api.utils import bigquery
+from data_hub_metrics_api.utils.collections import iter_batch_iterable
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -55,14 +56,14 @@ class PageViewsAndDownloadsProvider:
         self.redis_client = redis_client
         self.gcp_project_name = gcp_project_name
         self.page_view_and_download_totals_query = (
-            get_sql_query_file('page_view_and_download_totals_query.sql')
+            get_sql_query_from_file('page_view_and_download_totals_query.sql')
         )
 
         self.page_views_and_downloads_daily_query = (
-            get_sql_query_file('page_views_and_downloads_daily_query.sql')
+            get_sql_query_from_file('page_views_and_downloads_daily_query.sql')
         )
         self.page_views_and_downloads_monthly_query = (
-           get_sql_query_file('page_views_and_downloads_monthly_query.sql')
+           get_sql_query_from_file('page_views_and_downloads_monthly_query.sql')
         )
 
     def get_total_article_count(self) -> int:
@@ -141,27 +142,23 @@ class PageViewsAndDownloadsProvider:
 
     def refresh_page_view_and_download_totals(self, batch_size: int = BATCH_SIZE) -> None:
         LOGGER.info('Refreshing page view and download totals data from BigQuery...')
-        bq_result = get_bq_result_from_bq_query(
+        bq_result_iterable = bigquery.iter_dict_from_bq_query_with_progress(
             project_name=self.gcp_project_name,
-            query=self.page_view_and_download_totals_query
+            query=self.page_view_and_download_totals_query,
+            desc='Loading Redis'
         )
-        total_rows = bq_result.total_rows
-        LOGGER.info('Total rows from BigQuery: %d', total_rows)
-
         with self.redis_client.pipeline() as pipe:
-            for i, row in enumerate(iter_with_progress(bq_result, total_rows, 'Loading Redis'), 1):
-                pipe.set(
-                    f'article:{row['article_id']}:page_views',
-                    row['page_view_count']  # type: ignore[arg-type]
-                )
-                pipe.set(
-                    f'article:{row['article_id']}:downloads',
-                    row['download_count']  # type: ignore[arg-type]
-                )
-                if i % batch_size == 0:
-                    pipe.execute()
-            pipe.execute()
-
+            for batch in iter_batch_iterable(bq_result_iterable, batch_size=batch_size):
+                for row in batch:
+                    pipe.set(
+                        f'article:{row['article_id']}:page_views',
+                        row['page_view_count']  # type: ignore[arg-type]
+                    )
+                    pipe.set(
+                        f'article:{row['article_id']}:downloads',
+                        row['download_count']  # type: ignore[arg-type]
+                    )
+                pipe.execute()
         LOGGER.info('Done: Refreshing page view and download totals data from BigQuery')
 
     def refresh_page_views_and_downloads_daily(
@@ -170,31 +167,28 @@ class PageViewsAndDownloadsProvider:
         batch_size: int = BATCH_SIZE
     ) -> None:
         LOGGER.info('Refreshing page views and downloads daily from BigQuery...')
-        bq_result = get_bq_result_from_bq_query(
+        bq_result_iterable = bigquery.iter_dict_from_bq_query_with_progress(
             project_name=self.gcp_project_name,
             query=get_query_with_replaced_number_of_days(
                 self.page_views_and_downloads_daily_query,
                 number_of_days=number_of_days
-            )
+            ),
+            desc='Loading Redis'
         )
-        total_rows = bq_result.total_rows
-        LOGGER.info('Total rows from BigQuery: %d', total_rows)
-
         with self.redis_client.pipeline() as pipe:
-            for i, row in enumerate(iter_with_progress(bq_result, total_rows, 'Loading Redis'), 1):
-                pipe.hset(
-                    f'article:{row['article_id']}:page_views:by_date',
-                    row['event_date'].isoformat(),
-                    row['page_view_count']  # type: ignore[arg-type]
-                )
-                pipe.hset(
-                    f'article:{row['article_id']}:downloads:by_date',
-                    row['event_date'].isoformat(),
-                    row['download_count']  # type: ignore[arg-type]
-                )
-                if i % batch_size == 0:
-                    pipe.execute()
-            pipe.execute()
+            for batch in iter_batch_iterable(bq_result_iterable, batch_size=batch_size):
+                for row in batch:
+                    pipe.hset(
+                        f'article:{row['article_id']}:page_views:by_date',
+                        row['event_date'].isoformat(),
+                        row['page_view_count']  # type: ignore[arg-type]
+                    )
+                    pipe.hset(
+                        f'article:{row['article_id']}:downloads:by_date',
+                        row['event_date'].isoformat(),
+                        row['download_count']  # type: ignore[arg-type]
+                    )
+                pipe.execute()
         LOGGER.info('Done: Refreshing page views and dosnloads daily from BigQuery')
 
     def refresh_page_views_and_downloads_monthly(
@@ -203,29 +197,26 @@ class PageViewsAndDownloadsProvider:
         batch_size: int = BATCH_SIZE
     ) -> None:
         LOGGER.info('Refreshing monthly page views and downloads from BigQuery...')
-        bq_result = get_bq_result_from_bq_query(
+        bq_result_iterable = bigquery.iter_dict_from_bq_query_with_progress(
             project_name=self.gcp_project_name,
             query=get_query_with_replaced_number_of_months(
                 self.page_views_and_downloads_monthly_query,
                 number_of_months=number_of_months
-            )
+            ),
+            desc='Loading Redis'
         )
-        total_rows = bq_result.total_rows
-        LOGGER.info('Total rows from BigQuery: %d', total_rows)
-
         with self.redis_client.pipeline() as pipe:
-            for i, row in enumerate(iter_with_progress(bq_result, total_rows, 'Loading Redis'), 1):
-                pipe.hset(
-                    f'article:{row['article_id']}:page_views:by_month',
-                    row['year_month'],
-                    row['page_view_count']  # type: ignore[arg-type]
-                )
-                pipe.hset(
-                    f'article:{row['article_id']}:downloads:by_month',
-                    row['year_month'],
-                    row['download_count']  # type: ignore[arg-type]
-                )
-                if i % batch_size == 0:
-                    pipe.execute()
-            pipe.execute()
+            for batch in iter_batch_iterable(bq_result_iterable, batch_size=batch_size):
+                for row in batch:
+                    pipe.hset(
+                        f'article:{row['article_id']}:page_views:by_month',
+                        row['year_month'],
+                        row['page_view_count']  # type: ignore[arg-type]
+                    )
+                    pipe.hset(
+                        f'article:{row['article_id']}:downloads:by_month',
+                        row['year_month'],
+                        row['download_count']  # type: ignore[arg-type]
+                    )
+                pipe.execute()
         LOGGER.info('Done: Refreshing monthly page views and downloads from BigQuery')

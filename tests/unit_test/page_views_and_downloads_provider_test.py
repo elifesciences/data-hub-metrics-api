@@ -1,6 +1,5 @@
 from datetime import date
-from typing import Iterator
-from unittest.mock import ANY, MagicMock, call, patch
+from unittest.mock import ANY, MagicMock, call
 import pytest
 
 from data_hub_metrics_api.page_views_and_downloads_provider import (
@@ -9,31 +8,10 @@ from data_hub_metrics_api.page_views_and_downloads_provider import (
     get_query_with_replaced_number_of_days,
     get_query_with_replaced_number_of_months
 )
-import data_hub_metrics_api.page_views_and_downloads_provider as views_downloads_provider_module
 
 
 # Note: this could be any of the valid metric names
 METRIC_NAME_1: MetricNameLiteral = 'page_views'
-
-
-@pytest.fixture(name='redis_client_mock', autouse=True)
-def _redis_client_mock() -> MagicMock:
-    return MagicMock(name='redis_client')
-
-
-@pytest.fixture(name='redis_client_set_mock')
-def _redis_client_set_mock(redis_client_mock: MagicMock) -> MagicMock:
-    return redis_client_mock.set
-
-
-@pytest.fixture(name='redis_client_pipeline_mock')
-def _redis_client_pipeline_mock(redis_client_mock: MagicMock) -> MagicMock:
-    return redis_client_mock.pipeline
-
-
-@pytest.fixture(name='redis_client_hset_mock')
-def _redis_client_hset_mock(redis_client_mock: MagicMock) -> MagicMock:
-    return redis_client_mock.hset
 
 
 @pytest.fixture(name='redis_client_scan_iter_mock')
@@ -46,15 +24,6 @@ def _page_views_and_downloads_provider(
     redis_client_mock: MagicMock
 ) -> PageViewsAndDownloadsProvider:
     return PageViewsAndDownloadsProvider(redis_client_mock)
-
-
-@pytest.fixture(name='get_bq_result_from_bq_query_mock', autouse=True)
-def _get_bq_result_from_bq_query_mock() -> Iterator[MagicMock]:
-    with patch.object(
-        views_downloads_provider_module,
-        'get_bq_result_from_bq_query'
-    ) as mock:
-        yield mock
 
 
 class TestGetQueryWithReplacedNumberOfDays:
@@ -313,115 +282,96 @@ class TestGetMetricForArticleIdByTimePeriod:
 class TestPageViewsAndDownloadsProvider:
     def test_should_put_page_view_and_download_totals_in_redis(
         self,
-        get_bq_result_from_bq_query_mock: MagicMock,
+        iter_dict_from_bq_query_with_progress_mock: MagicMock,
         page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
         redis_client_pipeline_mock: MagicMock
     ):
-        mock_bq_result = MagicMock()
-        mock_bq_result.total_rows = 1
-        mock_bq_result.__iter__.return_value = iter([{
+        iter_dict_from_bq_query_with_progress_mock.return_value = iter([{
             'article_id': '12345',
             'page_view_count': 5,
             'download_count': 2
         }])
-        get_bq_result_from_bq_query_mock.return_value = mock_bq_result
-        mock_pipeline = MagicMock()
-        redis_client_pipeline_mock.return_value.__enter__.return_value = mock_pipeline
-
         page_views_and_downloads_provider.refresh_page_view_and_download_totals()
-        get_bq_result_from_bq_query_mock.assert_called_with(
+        iter_dict_from_bq_query_with_progress_mock.assert_called_with(
             project_name=page_views_and_downloads_provider.gcp_project_name,
-            query=page_views_and_downloads_provider.page_view_and_download_totals_query
+            query=page_views_and_downloads_provider.page_view_and_download_totals_query,
+            desc=ANY
         )
 
-        mock_pipeline.set.assert_has_calls([
+        redis_client_pipeline_mock.set.assert_has_calls([
             call('article:12345:page_views', 5),
             call('article:12345:downloads', 2)
         ])
-        mock_pipeline.execute.assert_called_once()
+        redis_client_pipeline_mock.execute.assert_called_once()
 
     def test_should_replace_number_of_days_in_query(
         self,
-        get_bq_result_from_bq_query_mock: MagicMock,
+        iter_dict_from_bq_query_with_progress_mock: MagicMock,
         page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
     ):
-        mock_bq_result = MagicMock()
-        mock_bq_result.total_rows = 0
-        get_bq_result_from_bq_query_mock.return_value = mock_bq_result
         page_views_and_downloads_provider.refresh_page_views_and_downloads_daily(number_of_days=123)
-        get_bq_result_from_bq_query_mock.assert_called_with(
+        iter_dict_from_bq_query_with_progress_mock.assert_called_with(
             project_name=page_views_and_downloads_provider.gcp_project_name,
             query=get_query_with_replaced_number_of_days(
                 page_views_and_downloads_provider.page_views_and_downloads_daily_query,
                 number_of_days=123
-            )
+            ),
+            desc=ANY
         )
 
     def test_should_put_data_in_redis_for_daily_page_views_and_downloads(
         self,
-        get_bq_result_from_bq_query_mock: MagicMock,
+        iter_dict_from_bq_query_with_progress_mock: MagicMock,
         page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
         redis_client_pipeline_mock: MagicMock
     ):
-        mock_bq_result = MagicMock()
-        mock_bq_result.total_rows = 1
-        mock_bq_result.__iter__.return_value = iter([{
+        iter_dict_from_bq_query_with_progress_mock.return_value = iter([{
             'article_id': '12345',
             'event_date': date.fromisoformat('2023-10-01'),
             'page_view_count': 5,
             'download_count': 2
         }])
-        get_bq_result_from_bq_query_mock.return_value = mock_bq_result
-        mock_pipeline = MagicMock()
-        redis_client_pipeline_mock.return_value.__enter__.return_value = mock_pipeline
         page_views_and_downloads_provider.refresh_page_views_and_downloads_daily(number_of_days=3)
-        mock_pipeline.hset.assert_has_calls([
+        redis_client_pipeline_mock.hset.assert_has_calls([
             call('article:12345:page_views:by_date', '2023-10-01', 5),
             call('article:12345:downloads:by_date', '2023-10-01', 2)
         ])
-        mock_pipeline.execute.assert_called_once()
+        redis_client_pipeline_mock.execute.assert_called_once()
 
     def test_should_replace_number_of_months_in_query(
         self,
-        get_bq_result_from_bq_query_mock: MagicMock,
+        iter_dict_from_bq_query_with_progress_mock: MagicMock,
         page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
     ):
-        mock_bq_result = MagicMock()
-        mock_bq_result.total_rows = 0
-        get_bq_result_from_bq_query_mock.return_value = mock_bq_result
         page_views_and_downloads_provider.refresh_page_views_and_downloads_monthly(
             number_of_months=12
         )
-        get_bq_result_from_bq_query_mock.assert_called_with(
+        iter_dict_from_bq_query_with_progress_mock.assert_called_with(
             project_name=page_views_and_downloads_provider.gcp_project_name,
             query=get_query_with_replaced_number_of_months(
                 page_views_and_downloads_provider.page_views_and_downloads_monthly_query,
                 number_of_months=12
-            )
+            ),
+            desc=ANY
         )
 
     def test_should_put_data_in_redis_for_monthly_page_views_and_downloads(
         self,
-        get_bq_result_from_bq_query_mock: MagicMock,
+        iter_dict_from_bq_query_with_progress_mock: MagicMock,
         page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
         redis_client_pipeline_mock: MagicMock
     ):
-        mock_bq_result = MagicMock()
-        mock_bq_result.total_rows = 1
-        mock_bq_result.__iter__.return_value = iter([{
+        iter_dict_from_bq_query_with_progress_mock.return_value = iter([{
             'article_id': '12345',
             'year_month': '2023-10',
             'page_view_count': 5,
             'download_count': 2
         }])
-        get_bq_result_from_bq_query_mock.return_value = mock_bq_result
-        mock_pipeline = MagicMock()
-        redis_client_pipeline_mock.return_value.__enter__.return_value = mock_pipeline
         page_views_and_downloads_provider.refresh_page_views_and_downloads_monthly(
             number_of_months=3
         )
-        mock_pipeline.hset.assert_has_calls([
+        redis_client_pipeline_mock.hset.assert_has_calls([
             call('article:12345:page_views:by_month', '2023-10', 5),
             call('article:12345:downloads:by_month', '2023-10', 2)
         ])
-        mock_pipeline.execute.assert_called_once()
+        redis_client_pipeline_mock.execute.assert_called_once()
