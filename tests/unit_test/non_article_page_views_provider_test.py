@@ -11,16 +11,6 @@ CONTENT_TYPE_1: ContentTypeLiteral = 'blog-article'
 CONTENT_ID_1 = 'content_id_1'
 
 
-@pytest.fixture(name='redis_client_mock', autouse=True)
-def _redis_client_mock() -> MagicMock:
-    return MagicMock(name='redis_client')
-
-
-@pytest.fixture(name='redis_client_set_mock')
-def _redis_client_set_mock(redis_client_mock: MagicMock) -> MagicMock:
-    return redis_client_mock.set
-
-
 @pytest.fixture(name='redis_client_get_mock')
 def _redis_client_get_mock(redis_client_mock: MagicMock) -> MagicMock:
     return redis_client_mock.get
@@ -81,7 +71,7 @@ class TestNonArticlePageViewsProvider:
         self,
         iter_dict_from_bq_query_with_progress_mock: MagicMock,
         non_article_page_views_provider: NonArticlePageViewsProvider,
-        redis_client_set_mock: MagicMock
+        redis_client_pipeline_mock: MagicMock
     ):
         iter_dict_from_bq_query_with_progress_mock.return_value = iter([{
             'content_type': CONTENT_TYPE_1,
@@ -94,7 +84,8 @@ class TestNonArticlePageViewsProvider:
             query=non_article_page_views_provider.non_article_page_view_totals_query,
             desc=ANY
         )
-        redis_client_set_mock.assert_called_once_with(
+        redis_client_pipeline_mock.set.assert_called_once_with(
             f'non-article:{CONTENT_TYPE_1}:{CONTENT_ID_1}:page_views',
             123
         )
+        redis_client_pipeline_mock.execute.assert_called_once()
