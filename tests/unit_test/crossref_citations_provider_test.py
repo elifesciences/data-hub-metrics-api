@@ -9,9 +9,9 @@ from data_hub_metrics_api.crossref_citations_provider import (
 )
 
 
-@pytest.fixture(name='redis_client_mock', autouse=True)
-def _redis_client_mock() -> MagicMock:
-    return MagicMock(name='redis_client')
+@pytest.fixture(name='redis_client_pipeline_mock')
+def _redis_client_pipeline_mock(redis_client_mock: MagicMock) -> MagicMock:
+    return redis_client_mock.pipeline.return_value.__enter__.return_value
 
 
 class TestCrossrefCitationsProvider:
@@ -27,20 +27,23 @@ class TestCrossrefCitationsProvider:
 
     def test_should_put_data_in_redis(
         self,
-        iter_dict_from_bq_query_with_progress_mock: MagicMock
+        iter_dict_from_bq_query_with_progress_mock: MagicMock,
+        redis_client_pipeline_mock: MagicMock,
+        redis_client_mock: MagicMock
     ):
         bq_result: Iterable[BigQueryResultRow] = [
             {'article_id': '12345', 'version_number': '1', 'citation_count': 10},
         ]
         iter_dict_from_bq_query_with_progress_mock.return_value = bq_result
-        redis_client = MagicMock(name='redis_client')
-        citation_provider = CrossrefCitationsProvider(redis_client=redis_client)
+        citation_provider = CrossrefCitationsProvider(redis_client=redis_client_mock)
         citation_provider.refresh_data()
-        redis_client.hset.assert_called_once_with(
+        print('Redis pipeline mock in test: %r', redis_client_pipeline_mock)
+        redis_client_pipeline_mock.hset.assert_called_once_with(
             'article:12345:crossref_citations',
             '1',
             10
         )
+        redis_client_pipeline_mock.execute.assert_called_once()
 
     def test_should_get_data_from_redis_by_version(
         self,

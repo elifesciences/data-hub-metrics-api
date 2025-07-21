@@ -8,8 +8,11 @@ from data_hub_metrics_api.api_router_typing import CitationsSourceMetricTypedDic
 from data_hub_metrics_api.citations_provider import CitationsProvider
 from data_hub_metrics_api.sql import get_sql_query_file
 from data_hub_metrics_api.utils import bigquery
+from data_hub_metrics_api.utils.collections import iter_batch_iterable
 
 LOGGER = logging.getLogger(__name__)
+
+BATCH_SIZE = 1000
 
 
 class BigQueryResultRow(TypedDict):
@@ -73,7 +76,8 @@ class CrossrefCitationsProvider(CitationsProvider):
 
     @override
     def refresh_data(
-        self
+        self,
+        batch_size: int = BATCH_SIZE
     ) -> None:
         LOGGER.info('Refreshing citation data from BigQuery...')
         bq_result = cast(
@@ -84,9 +88,17 @@ class CrossrefCitationsProvider(CitationsProvider):
                 desc='Loading Redis'
             )
         )
-        for row in bq_result:
-            self.redis_client.hset(
-                f'article:{row['article_id']}:crossref_citations',
-                row.get('version_number') or '',
-                row['citation_count']  # type: ignore[arg-type]
-            )
+        with self.redis_client.pipeline() as pipe:
+            LOGGER.debug('Redis pipeline %r', pipe)
+            for batch in iter_batch_iterable(bq_result, batch_size=batch_size):
+                LOGGER.debug('Processing batch...')
+                for row in batch:
+                    LOGGER.debug('Processing row in batch...')
+                    pipe.hset(
+                        f'article:{row["article_id"]}:crossref_citations',
+                        row.get('version_number') or '',
+                        row['citation_count']  # type: ignore[arg-type]
+                    )
+                pipe.execute()
+
+        LOGGER.info('Done: Refreshing citation data from BigQuery')
