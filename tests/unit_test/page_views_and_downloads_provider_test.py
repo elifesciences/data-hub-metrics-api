@@ -1,6 +1,5 @@
 from datetime import date
-from typing import Iterator
-from unittest.mock import ANY, MagicMock, call, patch
+from unittest.mock import ANY, MagicMock, call
 import pytest
 
 from data_hub_metrics_api.page_views_and_downloads_provider import (
@@ -9,7 +8,6 @@ from data_hub_metrics_api.page_views_and_downloads_provider import (
     get_query_with_replaced_number_of_days,
     get_query_with_replaced_number_of_months
 )
-import data_hub_metrics_api.page_views_and_downloads_provider as views_downloads_provider_module
 
 
 # Note: this could be any of the valid metric names
@@ -46,15 +44,6 @@ def _page_views_and_downloads_provider(
     redis_client_mock: MagicMock
 ) -> PageViewsAndDownloadsProvider:
     return PageViewsAndDownloadsProvider(redis_client_mock)
-
-
-@pytest.fixture(name='iter_dict_from_bq_query_with_progress_mock', autouse=True)
-def _iter_dict_from_bq_query_with_progress_mock() -> Iterator[MagicMock]:
-    with patch.object(
-        views_downloads_provider_module,
-        'iter_dict_from_bq_query_with_progress'
-    ) as mock:
-        yield mock
 
 
 class TestGetQueryWithReplacedNumberOfDays:

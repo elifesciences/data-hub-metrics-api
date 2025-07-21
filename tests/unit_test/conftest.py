@@ -27,6 +27,15 @@ def _bigquery_mock() -> Iterator[MagicMock]:
         yield mock
 
 
+@pytest.fixture(autouse=True)
+def iter_dict_from_bq_query_with_progress_mock() -> Iterator[MagicMock]:
+    with patch.object(
+        bigquery_module,
+        'iter_dict_from_bq_query_with_progress'
+    ) as mock:
+        yield mock
+
+
 @pytest.fixture(name='redis_client_mock', autouse=True)
 def _redis_client_mock() -> MagicMock:
     return MagicMock(name='redis_client')

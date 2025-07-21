@@ -7,7 +7,7 @@ from data_hub_metrics_api.api_router_typing import (
     MetricTimePeriodResponseTypedDict
 )
 from data_hub_metrics_api.sql import get_sql_query_file
-from data_hub_metrics_api.utils.bigquery import iter_dict_from_bq_query_with_progress
+from data_hub_metrics_api.utils import bigquery
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class NonArticlePageViewsProvider:
 
     def refresh_non_article_page_view_totals(self) -> None:
         LOGGER.info('Refreshing non-article page view totals data from BigQuery...')
-        bq_result_iterable = iter_dict_from_bq_query_with_progress(
+        bq_result_iterable = bigquery.iter_dict_from_bq_query_with_progress(
             project_name=self.gcp_project_name,
             query=self.non_article_page_view_totals_query,
             desc='Loading Redis'

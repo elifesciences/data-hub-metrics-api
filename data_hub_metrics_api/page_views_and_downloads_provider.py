@@ -8,7 +8,7 @@ from redis import Redis
 from data_hub_metrics_api.api_router_typing import MetricTimePeriodResponseTypedDict
 
 from data_hub_metrics_api.sql import get_sql_query_file
-from data_hub_metrics_api.utils.bigquery import iter_dict_from_bq_query_with_progress
+from data_hub_metrics_api.utils import bigquery
 
 
 LOGGER = logging.getLogger(__name__)
@@ -141,7 +141,7 @@ class PageViewsAndDownloadsProvider:
 
     def refresh_page_view_and_download_totals(self, batch_size: int = BATCH_SIZE) -> None:
         LOGGER.info('Refreshing page view and download totals data from BigQuery...')
-        bq_result_iterable = iter_dict_from_bq_query_with_progress(
+        bq_result_iterable = bigquery.iter_dict_from_bq_query_with_progress(
             project_name=self.gcp_project_name,
             query=self.page_view_and_download_totals_query,
             desc='Loading Redis'
@@ -168,7 +168,7 @@ class PageViewsAndDownloadsProvider:
         batch_size: int = BATCH_SIZE
     ) -> None:
         LOGGER.info('Refreshing page views and downloads daily from BigQuery...')
-        bq_result_iterable = iter_dict_from_bq_query_with_progress(
+        bq_result_iterable = bigquery.iter_dict_from_bq_query_with_progress(
             project_name=self.gcp_project_name,
             query=get_query_with_replaced_number_of_days(
                 self.page_views_and_downloads_daily_query,
@@ -199,7 +199,7 @@ class PageViewsAndDownloadsProvider:
         batch_size: int = BATCH_SIZE
     ) -> None:
         LOGGER.info('Refreshing monthly page views and downloads from BigQuery...')
-        bq_result_iterable = iter_dict_from_bq_query_with_progress(
+        bq_result_iterable = bigquery.iter_dict_from_bq_query_with_progress(
             project_name=self.gcp_project_name,
             query=get_query_with_replaced_number_of_months(
                 self.page_views_and_downloads_monthly_query,

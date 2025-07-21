@@ -1,9 +1,7 @@
-from typing import Iterator
-from unittest.mock import ANY, MagicMock, patch
+from unittest.mock import ANY, MagicMock
 
 import pytest
 
-import data_hub_metrics_api.non_article_page_views_provider as provider_module
 from data_hub_metrics_api.api_router_typing import ContentTypeLiteral
 from data_hub_metrics_api.non_article_page_views_provider import (
     NonArticlePageViewsProvider
@@ -33,15 +31,6 @@ def _non_article_page_views_provider(
     redis_client_mock: MagicMock
 ) -> NonArticlePageViewsProvider:
     return NonArticlePageViewsProvider(redis_client_mock)
-
-
-@pytest.fixture(name='iter_dict_from_bq_query_with_progress_mock', autouse=True)
-def _iter_dict_from_bq_query_with_progress_mock() -> Iterator[MagicMock]:
-    with patch.object(
-        provider_module,
-        'iter_dict_from_bq_query_with_progress'
-    ) as mock:
-        yield mock
 
 
 class TestNonArticlePageViewsProvider:
