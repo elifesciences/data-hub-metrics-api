@@ -20,11 +20,9 @@ def _page_views_and_downloads_provider_mock(
     return page_views_and_downloads_provider_class_mock.return_value
 
 
-@pytest.mark.parametrize('get_redis_client_mock', [cli_module], indirect=True)
 class TestMain:
     def test_should_call_refresh_data_on_page_views_and_downloads_provider(
         self,
-        get_redis_client_mock,  # pylint: disable=unused-argument
         page_views_and_downloads_provider_mock: MagicMock,
     ):
         main(['--number-of-days=123'])

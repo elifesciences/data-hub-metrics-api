@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from data_hub_metrics_api import main as main_module
 from data_hub_metrics_api.utils import bigquery as bigquery_module
 
 
@@ -37,8 +38,9 @@ def iter_dict_from_bq_query_with_progress_mock() -> Iterator[MagicMock]:
 
 
 @pytest.fixture(name='redis_client_mock', autouse=True)
-def _redis_client_mock() -> MagicMock:
-    return MagicMock(name='redis_client')
+def _redis_client_mock() -> Iterator[MagicMock]:
+    with patch.object(main_module, 'Redis') as mock:
+        yield mock.return_value
 
 
 @pytest.fixture(name='redis_client_pipeline_mock')
@@ -49,13 +51,3 @@ def _redis_client_pipeline_mock(redis_client_mock: MagicMock) -> MagicMock:
 @pytest.fixture(name='redis_client_set_mock')
 def _redis_client_set_mock(redis_client_mock: MagicMock) -> MagicMock:
     return redis_client_mock.set
-
-
-@pytest.fixture(name='get_redis_client_mock')
-def get_redis_client_mock(request) -> Iterator[MagicMock]:
-    target_module = getattr(request, 'param', None)
-    if target_module is None:
-        raise ValueError("You must parametrize get_redis_client_mock with the module to patch")
-
-    with patch.object(target_module, "get_redis_client") as mock:
-        yield mock
