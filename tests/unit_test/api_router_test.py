@@ -302,7 +302,7 @@ class TestPingPong:
     ):
         redis_client_mock.ping.return_value = False
         response = test_client.get('/ping/metrics')
-        response.raise_for_status()
+        assert response.status_code == 500
         actual_response_text = response.content.decode('utf-8')
         assert actual_response_text == 'no pong available'
 
@@ -313,6 +313,6 @@ class TestPingPong:
     ):
         redis_client_mock.ping.side_effect = redis.exceptions.ConnectionError()
         response = test_client.get('/ping/metrics')
-        response.raise_for_status()
+        assert response.status_code == 500
         actual_response_text = response.content.decode('utf-8')
         assert actual_response_text == 'no pong available'

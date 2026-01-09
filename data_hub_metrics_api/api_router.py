@@ -1,5 +1,5 @@
 import logging
-from typing import Annotated, Literal, Optional, Sequence
+from typing import Annotated, Literal, Sequence
 from fastapi import APIRouter, Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, PlainTextResponse
@@ -149,13 +149,12 @@ def create_api_router(
         )
 
     @router.get('/ping/metrics', response_class=PlainTextResponse)
-    def ping_pong() -> Optional[str]:
+    def ping_pong() -> PlainTextResponse:
         try:
             if redis_client.ping():
-                return 'pong'
-        except Exception as exc:
+                return PlainTextResponse('pong', status_code=200)
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             LOGGER.warning('Redis ping failed: %s', exc)
-            pass
-        return 'no pong available'
+        return PlainTextResponse('no pong available', status_code=500)
 
     return router
