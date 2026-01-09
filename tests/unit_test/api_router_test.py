@@ -275,3 +275,16 @@ class TestProvidePageViewsByContentType:
         )
         actual_response_json = response.json()
         assert actual_response_json == METRIC_TIME_PERIOD_RESPONSE_DICT_1
+
+
+class TestPingPong:
+    def test_should_return_pong(
+        self,
+        test_client: TestClient
+    ):
+        response = test_client.get(
+            '/ping/metrics'
+        )
+        response.raise_for_status()
+        actual_response_text = response.content.decode('utf-8')
+        assert actual_response_text == 'pong'

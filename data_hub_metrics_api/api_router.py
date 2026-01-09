@@ -2,7 +2,7 @@ import logging
 from typing import Annotated, Literal, Sequence
 from fastapi import APIRouter, Query
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 
 from data_hub_metrics_api.api_router_typing import (
     CitationsResponseSequence,
@@ -145,5 +145,9 @@ def create_api_router(
             content_id=content_id,
             by=by
         )
+
+    @router.get('/ping/metrics', response_class=PlainTextResponse)
+    def ping_pong() -> str:
+        return 'pong'
 
     return router
