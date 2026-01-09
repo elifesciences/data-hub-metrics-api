@@ -3,6 +3,8 @@ from unittest.mock import MagicMock
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 import pytest
+import redis
+import redis.exceptions
 
 from data_hub_metrics_api.api_router import create_api_router
 from data_hub_metrics_api.api_router_typing import (
@@ -293,12 +295,23 @@ class TestPingPong:
         actual_response_text = response.content.decode('utf-8')
         assert actual_response_text == 'pong'
 
-    def test_should_return_none_when_no_citation_providers(
+    def test_should_return_no_pong_available_if_redis_ping_returns_false(
         self,
         test_client: TestClient,
         redis_client_mock: MagicMock
     ):
         redis_client_mock.ping.return_value = False
+        response = test_client.get('/ping/metrics')
+        response.raise_for_status()
+        actual_response_text = response.content.decode('utf-8')
+        assert actual_response_text == 'no pong available'
+
+    def test_should_return_no_pong_available_if_redis_ping_raises_error(
+        self,
+        test_client: TestClient,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.ping.side_effect = redis.exceptions.ConnectionError()
         response = test_client.get('/ping/metrics')
         response.raise_for_status()
         actual_response_text = response.content.decode('utf-8')

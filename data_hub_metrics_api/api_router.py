@@ -150,8 +150,12 @@ def create_api_router(
 
     @router.get('/ping/metrics', response_class=PlainTextResponse)
     def ping_pong() -> Optional[str]:
-        if redis_client.ping():
-            return 'pong'
+        try:
+            if redis_client.ping():
+                return 'pong'
+        except Exception as exc:
+            LOGGER.warning('Redis ping failed: %s', exc)
+            pass
         return 'no pong available'
 
     return router
