@@ -153,6 +153,7 @@ def create_api_router(
         try:
             if redis_client.ping():
                 return PlainTextResponse('pong', status_code=200)
+            LOGGER.warning('Redis ping returned false')
         except Exception as exc:  # pylint: disable=broad-exception-caught
             LOGGER.warning('Redis ping failed: %s', exc)
         return PlainTextResponse('no pong available', status_code=500)
