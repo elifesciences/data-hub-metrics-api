@@ -1,8 +1,9 @@
 import logging
-from typing import Annotated, Literal, Sequence
+from typing import Annotated, Literal, Optional, Sequence
 from fastapi import APIRouter, Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, PlainTextResponse
+from redis import Redis
 
 from data_hub_metrics_api.api_router_typing import (
     CitationsResponseSequence,
@@ -41,6 +42,7 @@ class MetricTimePeriodJsonResponse(JSONResponse):
 
 
 def create_api_router(
+    redis_client: Redis,
     citations_provider_list: Sequence[CitationsProvider],
     page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
     metric_summary_provider: MetricSummaryProvider,
@@ -147,7 +149,9 @@ def create_api_router(
         )
 
     @router.get('/ping/metrics', response_class=PlainTextResponse)
-    def ping_pong() -> str:
-        return 'pong'
+    def ping_pong() -> Optional[str]:
+        if redis_client.ping():
+            return 'pong'
+        return 'no pong available'
 
     return router
