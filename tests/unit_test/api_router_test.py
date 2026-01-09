@@ -3,6 +3,8 @@ from unittest.mock import MagicMock
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 import pytest
+import redis
+import redis.exceptions
 
 from data_hub_metrics_api.api_router import create_api_router
 from data_hub_metrics_api.api_router_typing import (
@@ -61,6 +63,7 @@ def _non_article_page_views_provider_mock() -> MagicMock:
 
 
 def create_test_client(
+    redis_client: MagicMock,
     citations_provider_list: Sequence[CitationsProvider],
     page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
     metric_summary_provider: MetricSummaryProvider,
@@ -68,6 +71,7 @@ def create_test_client(
 ) -> TestClient:
     app = FastAPI()
     app.include_router(create_api_router(
+        redis_client=redis_client,
         citations_provider_list=citations_provider_list,
         page_views_and_downloads_provider=page_views_and_downloads_provider,
         metric_summary_provider=metric_summary_provider,
@@ -79,12 +83,14 @@ def create_test_client(
 
 @pytest.fixture(name='test_client')
 def _test_client(
+    redis_client_mock: MagicMock,
     citations_provider_mock: MagicMock,
     page_views_and_downloads_provider_mock: MagicMock,
     metric_summary_provider_mock: MagicMock,
     non_article_page_views_provider_mock: MagicMock
 ) -> TestClient:
     return create_test_client(
+        redis_client=redis_client_mock,
         citations_provider_list=[citations_provider_mock],
         page_views_and_downloads_provider=page_views_and_downloads_provider_mock,
         metric_summary_provider=metric_summary_provider_mock,
@@ -275,3 +281,38 @@ class TestProvidePageViewsByContentType:
         )
         actual_response_json = response.json()
         assert actual_response_json == METRIC_TIME_PERIOD_RESPONSE_DICT_1
+
+
+class TestPingPong:
+    def test_should_return_pong(
+        self,
+        test_client: TestClient,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.ping.return_value = True
+        response = test_client.get('/ping/metrics')
+        response.raise_for_status()
+        actual_response_text = response.content.decode('utf-8')
+        assert actual_response_text == 'pong'
+
+    def test_should_return_no_pong_available_if_redis_ping_returns_false(
+        self,
+        test_client: TestClient,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.ping.return_value = False
+        response = test_client.get('/ping/metrics')
+        assert response.status_code == 500
+        actual_response_text = response.content.decode('utf-8')
+        assert actual_response_text == 'no pong available'
+
+    def test_should_return_no_pong_available_if_redis_ping_raises_error(
+        self,
+        test_client: TestClient,
+        redis_client_mock: MagicMock
+    ):
+        redis_client_mock.ping.side_effect = redis.exceptions.ConnectionError()
+        response = test_client.get('/ping/metrics')
+        assert response.status_code == 500
+        actual_response_text = response.content.decode('utf-8')
+        assert actual_response_text == 'no pong available'
