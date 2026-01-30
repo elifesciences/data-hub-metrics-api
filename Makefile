@@ -93,7 +93,7 @@ flake8:
 
 pylint:
 	$(DOCKER_COMPOSE) run --rm data-hub-metrics-api-dev \
-		sh -lc 'PYTHONPATH=/ python -m pylint data_hub_metrics_api tests'
+		sh -lc 'python -m pip install -e / && python -m pylint data_hub_metrics_api tests'
 
 pylint-debug:
 	$(DOCKER_COMPOSE) run --rm data-hub-metrics-api-dev \
