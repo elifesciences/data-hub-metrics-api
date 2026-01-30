@@ -93,8 +93,7 @@ flake8:
 
 pylint:
 	$(DOCKER_COMPOSE) run --rm data-hub-metrics-api-dev \
-		python -c "import os,sys; print('cwd:', os.getcwd()); print('path0:', sys.path[0]); import pathlib; print('has pkg:', pathlib.Path('data_hub_metrics_api').is_dir())"
-
+		python -m pylint --source-roots=/ data_hub_metrics_api tests
 
 mypy:
 	$(DOCKER_COMPOSE) run --rm data-hub-metrics-api-dev \
