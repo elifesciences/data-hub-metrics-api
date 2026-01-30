@@ -58,6 +58,7 @@ def create_app():
     citations_provider_list = get_citations_provider_list(crossref_citations_provider)
 
     app.include_router(create_api_router(
+        redis_client=redis_client,
         citations_provider_list=citations_provider_list,
         page_views_and_downloads_provider=page_views_and_downloads_provider,
         metric_summary_provider=MetricSummaryProvider(

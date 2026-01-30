@@ -2,7 +2,8 @@ import logging
 from typing import Annotated, Literal, Sequence
 from fastapi import APIRouter, Query
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
+from redis import Redis
 
 from data_hub_metrics_api.api_router_typing import (
     CitationsResponseSequence,
@@ -41,6 +42,7 @@ class MetricTimePeriodJsonResponse(JSONResponse):
 
 
 def create_api_router(
+    redis_client: Redis,
     citations_provider_list: Sequence[CitationsProvider],
     page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
     metric_summary_provider: MetricSummaryProvider,
@@ -145,5 +147,15 @@ def create_api_router(
             content_id=content_id,
             by=by
         )
+
+    @router.get('/ping/metrics', response_class=PlainTextResponse)
+    def ping_pong() -> PlainTextResponse:
+        try:
+            if redis_client.ping():
+                return PlainTextResponse('pong', status_code=200)
+            LOGGER.warning('Redis ping returned false')
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            LOGGER.warning('Redis ping failed: %s', exc)
+        return PlainTextResponse('no pong available', status_code=500)
 
     return router
