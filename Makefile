@@ -93,13 +93,17 @@ flake8:
 
 pylint:
 	$(DOCKER_COMPOSE) run --rm data-hub-metrics-api-dev \
-  		sh -lc 'ls -la /data_hub_metrics_api; echo "---"; ls -la /data_hub_metrics_api/__init__.py'
+		sh -lc 'PYTHONPATH=/ python -m pylint data_hub_metrics_api tests'
+
+pylint-debug:
+	$(DOCKER_COMPOSE) run --rm data-hub-metrics-api-dev \
+		sh -lc 'pwd; ls -la; ls -la /data_hub_metrics_api; ls -la /data_hub_metrics_api/__init__.py'
 
 mypy:
 	$(DOCKER_COMPOSE) run --rm data-hub-metrics-api-dev \
 		python -m mypy --check-untyped-defs data_hub_metrics_api tests
 
-lint: flake8 pylint mypy
+lint: flake8 pylint-debug pylint mypy
 
 pytest:
 	$(DOCKER_COMPOSE) run --rm data-hub-metrics-api-dev \
