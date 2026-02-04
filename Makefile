@@ -93,7 +93,7 @@ flake8:
 
 pylint:
 	$(DOCKER_COMPOSE) run --rm data-hub-metrics-api-dev \
-  		sh -lc 'ls -la /data_hub_metrics_api; echo "---"; ls -la /data_hub_metrics_api/__init__.py'
+		python -m pylint data_hub_metrics_api tests
 
 mypy:
 	$(DOCKER_COMPOSE) run --rm data-hub-metrics-api-dev \

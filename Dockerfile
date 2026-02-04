@@ -16,6 +16,8 @@ RUN if [ "${install_dev}" = "y" ]; then \
         -r requirements.dev.txt; \
     fi
 
+WORKDIR /app
+
 COPY data_hub_metrics_api ./data_hub_metrics_api
 COPY static ./static
 COPY config ./config
