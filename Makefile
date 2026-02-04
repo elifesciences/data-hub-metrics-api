@@ -95,15 +95,11 @@ pylint:
 	$(DOCKER_COMPOSE) run --rm data-hub-metrics-api-dev \
 		sh -lc 'python -m pip install -e / && python -m pylint data_hub_metrics_api tests'
 
-pylint-debug:
-	$(DOCKER_COMPOSE) run --rm data-hub-metrics-api-dev \
-		sh -lc 'pwd; ls -la; ls -la /data_hub_metrics_api; ls -la /data_hub_metrics_api/__init__.py'
-
 mypy:
 	$(DOCKER_COMPOSE) run --rm data-hub-metrics-api-dev \
 		python -m mypy --check-untyped-defs data_hub_metrics_api tests
 
-lint: flake8 pylint-debug pylint mypy
+lint: flake8 pylint mypy
 
 pytest:
 	$(DOCKER_COMPOSE) run --rm data-hub-metrics-api-dev \
