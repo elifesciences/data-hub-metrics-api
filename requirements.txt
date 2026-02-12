@@ -1,4 +1,4 @@
-fastapi[standard]==0.128.8
+fastapi[standard]==0.129.0
 google-cloud-bigquery==3.40.0
 redis==7.1.1
 tqdm==4.67.3
