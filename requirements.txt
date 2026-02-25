@@ -1,4 +1,4 @@
 fastapi[standard]==0.132.0
 google-cloud-bigquery==3.40.1
-redis==7.2.0
+redis==7.2.1
 tqdm==4.67.3
