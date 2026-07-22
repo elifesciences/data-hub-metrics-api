@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 import logging
 import re
 from typing import Literal, Optional, Sequence, TypedDict
@@ -38,6 +38,13 @@ def get_query_with_replaced_number_of_months(
     number_of_months: int
 ) -> str:
     return query.replace(r'{number_of_months}', str(number_of_months))
+
+
+def get_year_month_months_ago(number_of_months: int) -> str:
+    today = date.today()
+    total_months = today.year * 12 + (today.month - 1) - number_of_months
+    year, month_index = divmod(total_months, 12)
+    return f'{year:04d}-{month_index + 1:02d}'
 
 
 def get_article_id_from_page_views_total_key(key: str) -> str:
@@ -189,6 +196,9 @@ class PageViewsAndDownloadsProvider:
                         row['download_count']  # type: ignore[arg-type]
                     )
                 pipe.execute()
+        cutoff_date = (date.today() - timedelta(days=number_of_days)).isoformat()
+        self._prune_hash_fields_before('article:*:page_views:by_date', cutoff_date)
+        self._prune_hash_fields_before('article:*:downloads:by_date', cutoff_date)
         LOGGER.info('Done: Refreshing page views and dosnloads daily from BigQuery')
 
     def refresh_page_views_and_downloads_monthly(
@@ -219,4 +229,38 @@ class PageViewsAndDownloadsProvider:
                         row['download_count']  # type: ignore[arg-type]
                     )
                 pipe.execute()
+        cutoff_month = get_year_month_months_ago(number_of_months)
+        self._prune_hash_fields_before('article:*:page_views:by_month', cutoff_month)
+        self._prune_hash_fields_before('article:*:downloads:by_month', cutoff_month)
         LOGGER.info('Done: Refreshing monthly page views and downloads from BigQuery')
+
+    def _prune_hash_fields_before(
+        self,
+        key_pattern: str,
+        cutoff: str,
+        batch_size: int = BATCH_SIZE
+    ) -> None:
+        LOGGER.info('Pruning fields before %s for pattern %r', cutoff, key_pattern)
+        pruned_hash_count = 0
+        with self.redis_client.pipeline() as pipe:
+            pending = 0
+            for key in self.redis_client.scan_iter(match=key_pattern, count=1000):
+                old_fields = [
+                    field for field in self.redis_client.hkeys(key)  # type: ignore[union-attr]
+                    if field.decode('utf-8') < cutoff
+                ]
+                if not old_fields:
+                    continue
+                pipe.hdel(key, *old_fields)
+                pruned_hash_count += 1
+                pending += 1
+                if pending >= batch_size:
+                    pipe.execute()
+                    pending = 0
+            if pending:
+                pipe.execute()
+        LOGGER.info(
+            'Pruned old fields from %d hashes for pattern %r',
+            pruned_hash_count,
+            key_pattern
+        )
