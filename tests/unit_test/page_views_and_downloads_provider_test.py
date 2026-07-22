@@ -1,12 +1,14 @@
 from datetime import date
-from unittest.mock import ANY, MagicMock, call
+from unittest.mock import ANY, MagicMock, call, patch
 import pytest
 
+from data_hub_metrics_api import page_views_and_downloads_provider as provider_module
 from data_hub_metrics_api.page_views_and_downloads_provider import (
     MetricNameLiteral,
     PageViewsAndDownloadsProvider,
     get_query_with_replaced_number_of_days,
-    get_query_with_replaced_number_of_months
+    get_query_with_replaced_number_of_months,
+    get_year_month_months_ago
 )
 
 
@@ -40,6 +42,18 @@ class TestGetQueryWithReplacedNumberOfMonths:
             'SELECT {number_of_months}',
             number_of_months=12
         ) == 'SELECT 12'
+
+
+class TestGetYearMonthMonthsAgo:
+    def test_should_return_year_month_that_is_number_of_months_ago(self):
+        with patch.object(provider_module, 'date') as date_mock:
+            date_mock.today.return_value = date(2026, 7, 21)
+            assert get_year_month_months_ago(36) == '2023-07'
+
+    def test_should_handle_crossing_the_year_boundary(self):
+        with patch.object(provider_module, 'date') as date_mock:
+            date_mock.today.return_value = date(2026, 1, 15)
+            assert get_year_month_months_ago(3) == '2025-10'
 
 
 class TestGetArticleIds:
@@ -375,3 +389,93 @@ class TestPageViewsAndDownloadsProvider:
             call('article:12345:downloads:by_month', '2023-10', 2)
         ])
         redis_client_pipeline_mock.execute.assert_called_once()
+
+    def test_should_prune_daily_fields_older_than_the_number_of_days_window(
+        self,
+        iter_dict_from_bq_query_with_progress_mock: MagicMock,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
+        redis_client_mock: MagicMock,
+        redis_client_pipeline_mock: MagicMock
+    ):
+        iter_dict_from_bq_query_with_progress_mock.return_value = iter([{
+            'article_id': '12345',
+            'event_date': date.fromisoformat('2023-10-01'),
+            'page_view_count': 5,
+            'download_count': 2
+        }])
+        redis_client_mock.scan_iter.side_effect = [
+            iter([b'article:12345:page_views:by_date']),
+            iter([b'article:12345:downloads:by_date'])
+        ]
+        redis_client_mock.hkeys.return_value = [b'2023-09-01', b'2023-10-01']
+        with patch.object(provider_module, 'date') as date_mock:
+            date_mock.today.return_value = date(2023, 10, 3)
+            page_views_and_downloads_provider.refresh_page_views_and_downloads_daily(
+                number_of_days=3
+            )
+        # cutoff = 2023-10-03 minus 3 days = 2023-09-30: '2023-09-01' is dropped, '2023-10-01' kept
+        redis_client_mock.scan_iter.assert_any_call(
+            match='article:*:page_views:by_date', count=1000
+        )
+        redis_client_pipeline_mock.hdel.assert_any_call(
+            b'article:12345:page_views:by_date', b'2023-09-01'
+        )
+        redis_client_pipeline_mock.hdel.assert_any_call(
+            b'article:12345:downloads:by_date', b'2023-09-01'
+        )
+
+    def test_should_not_prune_daily_fields_within_the_number_of_days_window(
+        self,
+        iter_dict_from_bq_query_with_progress_mock: MagicMock,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
+        redis_client_mock: MagicMock,
+        redis_client_pipeline_mock: MagicMock
+    ):
+        iter_dict_from_bq_query_with_progress_mock.return_value = iter([{
+            'article_id': '12345',
+            'event_date': date.fromisoformat('2023-10-01'),
+            'page_view_count': 5,
+            'download_count': 2
+        }])
+        redis_client_mock.scan_iter.side_effect = [
+            iter([b'article:12345:page_views:by_date']),
+            iter([b'article:12345:downloads:by_date'])
+        ]
+        redis_client_mock.hkeys.return_value = [b'2023-10-01', b'2023-10-02']
+        with patch.object(provider_module, 'date') as date_mock:
+            date_mock.today.return_value = date(2023, 10, 3)
+            page_views_and_downloads_provider.refresh_page_views_and_downloads_daily(
+                number_of_days=30
+            )
+        redis_client_pipeline_mock.hdel.assert_not_called()
+
+    def test_should_prune_monthly_fields_older_than_the_number_of_months_window(
+        self,
+        iter_dict_from_bq_query_with_progress_mock: MagicMock,
+        page_views_and_downloads_provider: PageViewsAndDownloadsProvider,
+        redis_client_mock: MagicMock,
+        redis_client_pipeline_mock: MagicMock
+    ):
+        iter_dict_from_bq_query_with_progress_mock.return_value = iter([{
+            'article_id': '12345',
+            'year_month': '2023-10',
+            'page_view_count': 5,
+            'download_count': 2
+        }])
+        redis_client_mock.scan_iter.side_effect = [
+            iter([b'article:12345:page_views:by_month']),
+            iter([b'article:12345:downloads:by_month'])
+        ]
+        redis_client_mock.hkeys.return_value = [b'2020-01', b'2023-10']
+        with patch.object(provider_module, 'date') as date_mock:
+            date_mock.today.return_value = date(2023, 10, 3)
+            page_views_and_downloads_provider.refresh_page_views_and_downloads_monthly(
+                number_of_months=3
+            )
+        # cutoff month = 2023-07: '2020-01' is dropped, '2023-10' kept
+        redis_client_mock.scan_iter.assert_any_call(
+            match='article:*:page_views:by_month', count=1000
+        )
+        redis_client_pipeline_mock.hdel.assert_any_call(
+            b'article:12345:page_views:by_month', b'2020-01'
+        )
